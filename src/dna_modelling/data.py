@@ -16,7 +16,7 @@ class Data():
             print(f"Downloading datset to {self.data_path}...")
             urlretrieve(self.backup_url, self.data_path)
 
-    def load_data(self, backed=False):
+    def load_data(self, backed=True):
         self.ensure_data_downloaded()
 
         if backed:
