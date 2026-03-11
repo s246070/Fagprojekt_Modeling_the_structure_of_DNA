@@ -31,4 +31,9 @@ class LDM(nn.Module):
         self.embed_cells = torch.nn.Parameter(torch.randn(self.cells, self.ls_dim, device=device))
         self.embed_features = torch.nn.Parameter(torch.randn(self.features, self.ls_dim, device=device))
 
+        def euclidian(z_i,w_j)
+
+            return toch.cdist(z_i,w_j,p=2)
+
+        
         
