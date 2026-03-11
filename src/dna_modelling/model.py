@@ -115,3 +115,72 @@ class LDM(nn.Module):
             print(f"Epoch {epoch}, Loss {loss.item():.4f}")
 
         return losses
+
+import torch
+import torch.nn as nn
+
+class ATACLDM(nn.Module):
+    def __init__(self, Aij, embedding_dim, device="cuda", n_epochs=100, lr=1e-3, seed=None):
+        super().__init__()
+        self.Aij = Aij.float().to(device)
+        self.device = device
+        self.n_cells, self.n_peaks = Aij.shape
+        self.embedding_dim = embedding_dim
+        self.n_epochs = n_epochs
+        self.lr = lr
+
+        if seed is not None:
+            torch.manual_seed(seed)
+            if torch.cuda.is_available():
+                torch.cuda.manual_seed_all(seed)
+
+        # Latent embeddings
+        self.z = nn.Parameter(torch.randn(self.n_cells, embedding_dim, device=device) * 0.01)
+        self.w = nn.Parameter(torch.randn(self.n_peaks, embedding_dim, device=device) * 0.01)
+
+        # Bias terms
+        self.global_bias = nn.Parameter(torch.zeros(1, device=device))
+        self.cell_bias = nn.Parameter(torch.zeros(self.n_cells, device=device))
+        self.peak_bias = nn.Parameter(torch.zeros(self.n_peaks, device=device))
+
+    def forward(self):
+        dist = torch.cdist(self.z, self.w, p=2)  # [cells, peaks]
+        logits = self.global_bias + self.cell_bias[:, None] + self.peak_bias[None, :] - dist
+        return logits
+
+    def get_probabilities(self):
+        return torch.sigmoid(self.forward())
+
+    def loss(self, pos_weight=None):
+        logits = self.forward()
+        if pos_weight is not None:
+            criterion = nn.BCEWithLogitsLoss(pos_weight=pos_weight)
+        else:
+            criterion = nn.BCEWithLogitsLoss()
+        return criterion(logits, self.Aij)
+
+    def fit(self):
+        optimizer = torch.optim.Adam(self.parameters(), lr=self.lr)
+        losses = []
+
+        # optional: compute positive class weight
+        n_pos = self.Aij.sum()
+        n_neg = self.Aij.numel() - n_pos
+        pos_weight = (n_neg / (n_pos + 1e-8)).detach()
+
+        for epoch in range(self.n_epochs):
+            optimizer.zero_grad()
+            loss = self.loss(pos_weight=pos_weight)
+            loss.backward()
+            optimizer.step()
+
+            losses.append(loss.item())
+            print(f"Epoch {epoch+1}/{self.n_epochs}, Loss: {loss.item():.4f}")
+
+        return losses
+
+    def get_embeddings(self):
+        return (
+            self.z.detach().cpu().numpy(),
+            self.w.detach().cpu().numpy()
+        )
