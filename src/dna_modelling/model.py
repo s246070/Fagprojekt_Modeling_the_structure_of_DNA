@@ -1,6 +1,6 @@
 from torch import nn
 import torch
-from torch.distributions import Normal
+from torch.distributions import sigmoid
 
 
 class LDM(nn.Module):
@@ -31,12 +31,6 @@ class LDM(nn.Module):
         self.beta = nn.Parameter(torch.randn(1, device=device))
         self.embed_cells = torch.nn.Parameter(torch.randn(self.cells, self.ls_dim, device=device))
         self.embed_features = torch.nn.Parameter(torch.randn(self.features, self.ls_dim, device=device))
-
-        def euclidian(z_i,w_j)
-
-            return toch.cdist(z_i,w_j,p=2)
-
-        
         
 
     def __set_seed(self, seed):
@@ -65,7 +59,6 @@ class LDM(nn.Module):
             latent_var: [D x E] matrix of latent scores
         """
 
-        normal_dist = Normal(0, 1)
 
         # Linear term βᵀx_ij
         linear_term = torch.matmul(self.Aij, self.beta.unsqueeze(1))
@@ -77,6 +70,6 @@ class LDM(nn.Module):
         latent_var = self.gamma + linear_term + dist
 
         # Probit probability
-        prob_matrix = normal_dist.cdf(latent_var)
+        prob_matrix = torch.sigmoid(latent_var)
 
         return prob_matrix, latent_var
