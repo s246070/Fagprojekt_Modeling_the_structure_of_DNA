@@ -15,9 +15,6 @@ The directory structure of the project looks like this:
 ├── data/                     # Data directory
 │   ├── processed
 │   └── raw
-├── dockerfiles/              # Dockerfiles
-│   ├── api.Dockerfile
-│   └── train.Dockerfile
 ├── docs/                     # Documentation
 │   ├── mkdocs.yml
 │   └── source/
