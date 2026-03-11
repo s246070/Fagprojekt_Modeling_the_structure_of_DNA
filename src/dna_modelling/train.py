@@ -3,6 +3,9 @@ from dna_modelling.data import Data
 import torch
 import torch.nn as nn
 
+
+
+
 def TrainModel(model,train_dataloader, epochs=1,val_dataloader=None, device=None, threads=1, loss_fn=ordinal_cross_entropy_loss(), optimizer= Adam()):
     """Trains the model for a given number of epochs.
     
@@ -58,7 +61,3 @@ def TrainModel(model,train_dataloader, epochs=1,val_dataloader=None, device=None
 
             test_acc.append(epoch_val_acc / len(val_dataloader))
             val_loss.append(epoch_val_loss / len(val_dataloader))
-
-
-
-
