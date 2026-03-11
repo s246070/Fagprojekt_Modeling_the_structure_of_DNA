@@ -93,3 +93,25 @@ class LDM(nn.Module):
         )
 
         return loss
+    
+    def train_model(self):
+
+        optimizer = torch.optim.Adam(self.parameters(), lr=self.lr)
+
+        losses = []
+
+        for epoch in range(self.n_epochs):
+
+            optimizer.zero_grad()
+
+            loss = self.loss()
+
+            loss.backward()
+
+            optimizer.step()
+
+            losses.append(loss.item())
+
+            print(f"Epoch {epoch}, Loss {loss.item():.4f}")
+
+        return losses
