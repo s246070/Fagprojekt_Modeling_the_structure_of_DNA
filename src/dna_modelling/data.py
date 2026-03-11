@@ -1,29 +1,24 @@
 from pathlib import Path
+from urllib.request import urlretrieve
+import scanpy as sc
 
-import typer
-from torch.utils.data import Dataset
+class Data():
 
+    def __init__(self):
+        self.data_directory = Path("data")
+        self.data_path = self.data_directory / "lung_atlas_preprocessed.h5ad"
+        self.backup_url = "https://figshare.com/ndownloader/files/52859288"
 
-class MyDataset(Dataset):
-    """My custom dataset."""
+    def ensure_data_downloaded(self):
+        self.data_directory.mkdir(parents=True, exist_ok=True)
 
-    def __init__(self, data_path: Path) -> None:
-        self.data_path = data_path
+        if not self.data_path.exists():
+            print(f"Downloading datset to {self.data_path}...")
+            urlretrieve(self.backup_url, self.data_path)
 
-    def __len__(self) -> int:
-        """Return the length of the dataset."""
+    def load_data(self, backed=False):
+        self.ensure_data_downloaded()
 
-    def __getitem__(self, index: int):
-        """Return a given sample from the dataset."""
-
-    def preprocess(self, output_folder: Path) -> None:
-        """Preprocess the raw data and save it to the output folder."""
-
-def preprocess(data_path: Path, output_folder: Path) -> None:
-    print("Preprocessing data...")
-    dataset = MyDataset(data_path)
-    dataset.preprocess(output_folder)
-
-
-if __name__ == "__main__":
-    typer.run(preprocess)
+        if backed:
+            return sc.read_h5ad(self.data_path, backed="r")
+        return sc.read_h5ad(self.data_path)
