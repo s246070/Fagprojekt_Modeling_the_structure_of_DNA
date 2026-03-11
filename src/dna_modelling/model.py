@@ -41,12 +41,20 @@ class LDM(nn.Module):
                 torch.cuda.manual_seed_all(seed)
     
     def forward(self):
-        """Forward pass to reconstruct the data matrix."""
-        # Compute pairwise distances between cell and feature embeddings
-        dist = torch.cdist(self.embed_cells, self.embed_features)
-        # Reconstruct the data matrix 
-        recon = self.gamma * dist + self.beta
-        return recon
+
+        # linear term
+        linear_term = torch.matmul(self.Aij, self.beta.unsqueeze(1))
+
+        # latent distance
+        dist = -torch.norm(self.w.unsqueeze(1) - self.v.unsqueeze(0), dim=2)
+
+        # latent score
+        z = self.gamma + linear_term + dist
+
+        # probability
+        prob = torch.sigmoid(z)
+
+        return prob
     
     from torch.distributions import Normal
 
@@ -73,3 +81,15 @@ class LDM(nn.Module):
         prob_matrix = torch.sigmoid(latent_var)
 
         return prob_matrix, latent_var
+
+
+    def loss(self):
+
+        prob = self.forward()
+
+        loss = nn.functional.binary_cross_entropy(
+            prob,
+            self.Aij.float()
+        )
+
+        return loss
