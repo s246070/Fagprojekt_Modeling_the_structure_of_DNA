@@ -1,186 +1,52 @@
-from torch import nn
-import torch
-from torch.distributions import sigmoid
-
-
-class LDM(nn.Module):
-    """"
-    Latent Distance Model (LDM) for DNA modelling. This model learns latent representations for cells and features, 
-    and uses them to reconstruct the original data matrix. 
-    The model is trained using mean squared error loss between the original data and the reconstructed data.
-    """
-    def __init__(self, data, ls_dim, device, epochs, lr, seed=None):
-        super(LDM, self).__init__()
-        self.data = data
-        self.ls_dim = ls_dim
-        self.device = device
-
-        # data dimensions
-        self.cells, self.features = data.shape
-
-        # Hyperparameters
-        self.epochs = epochs
-        self.lr = lr
-
-        # Set random seed for reproducibility
-        self.seed = seed
-        self.__set_seed(seed)
-
-        # Learned parameters
-        self.gamma = nn.Parameter(torch.randn(1, device=device))
-        self.beta = nn.Parameter(torch.randn(1, device=device))
-        self.embed_cells = torch.nn.Parameter(torch.randn(self.cells, self.ls_dim, device=device))
-        self.embed_features = torch.nn.Parameter(torch.randn(self.features, self.ls_dim, device=device))
-        
-
-    def __set_seed(self, seed):
-        """Set random seed for reproducibility."""
-        if seed is not None:
-            torch.manual_seed(seed)
-            if torch.cuda.is_available():
-                torch.cuda.manual_seed_all(seed)
-    
-    def forward(self):
-
-        # linear term
-        linear_term = torch.matmul(self.Aij, self.beta.unsqueeze(1))
-
-        # latent distance
-        dist = -torch.norm(self.w.unsqueeze(1) - self.v.unsqueeze(0), dim=2)
-
-        # latent score
-        z = self.gamma + linear_term + dist
-
-        # probability
-        prob = torch.sigmoid(z)
-
-        return prob
-    
-    from torch.distributions import Normal
-
-    def probit(self):
-        """
-        Compute binary edge probabilities using a probit latent distance model.
-
-        Returns:
-            prob_matrix: [D x E] matrix of edge probabilities
-            latent_var: [D x E] matrix of latent scores
-        """
-
-
-        # Linear term βᵀx_ij
-        linear_term = torch.matmul(self.Aij, self.beta.unsqueeze(1))
-
-        # Distance term -||w_i - v_j||
-        dist = -torch.norm(self.w.unsqueeze(1) - self.v.unsqueeze(0), dim=2)
-
-        # Latent score
-        latent_var = self.gamma + linear_term + dist
-
-        # Probit probability
-        prob_matrix = torch.sigmoid(latent_var)
-
-        return prob_matrix, latent_var
-
-
-    def loss(self):
-
-        prob = self.forward()
-
-        loss = nn.functional.binary_cross_entropy(
-            prob,
-            self.Aij.float()
-        )
-
-        return loss
-    
-    def train_model(self):
-
-        optimizer = torch.optim.Adam(self.parameters(), lr=self.lr)
-
-        losses = []
-
-        for epoch in range(self.n_epochs):
-
-            optimizer.zero_grad()
-
-            loss = self.loss()
-
-            loss.backward()
-
-            optimizer.step()
-
-            losses.append(loss.item())
-
-            print(f"Epoch {epoch}, Loss {loss.item():.4f}")
-
-        return losses
-
 import torch
 import torch.nn as nn
 
-class ATACLDM(nn.Module):
-    def __init__(self, Aij, embedding_dim, device="cuda", n_epochs=100, lr=1e-3, seed=None):
+class LDM(nn.Module):
+    """
+    Binary latent distance model for cell x peak accessibility matrices.
+    """
+    def __init__(self, data, ls_dim, device, epochs, lr, seed=None):
         super().__init__()
-        self.Aij = Aij.float().to(device)
+        self.Aij = data.float().to(device)
+        self.ls_dim = ls_dim
         self.device = device
-        self.n_cells, self.n_peaks = Aij.shape
-        self.embedding_dim = embedding_dim
-        self.n_epochs = n_epochs
+
+        self.cells, self.features = self.Aij.shape
+        self.epochs = epochs
         self.lr = lr
 
+        self.seed = seed
+        self.__set_seed(seed)
+
+        # Latent embeddings
+        self.embed_cells = nn.Parameter(
+            torch.randn(self.cells, self.ls_dim, device=device) * 0.01
+        )
+        self.embed_features = nn.Parameter(
+            torch.randn(self.features, self.ls_dim, device=device) * 0.01
+        )
+
+        # Bias terms
+        self.global_bias = nn.Parameter(torch.zeros(1, device=device))
+        self.cell_bias = nn.Parameter(torch.zeros(self.cells, device=device))
+        self.feature_bias = nn.Parameter(torch.zeros(self.features, device=device))
+
+        print("Class initialized")
+    def __set_seed(self, seed):
         if seed is not None:
             torch.manual_seed(seed)
             if torch.cuda.is_available():
                 torch.cuda.manual_seed_all(seed)
 
-        # Latent embeddings
-        self.z = nn.Parameter(torch.randn(self.n_cells, embedding_dim, device=device) * 0.01)
-        self.w = nn.Parameter(torch.randn(self.n_peaks, embedding_dim, device=device) * 0.01)
-
-        # Bias terms
-        self.global_bias = nn.Parameter(torch.zeros(1, device=device))
-        self.cell_bias = nn.Parameter(torch.zeros(self.n_cells, device=device))
-        self.peak_bias = nn.Parameter(torch.zeros(self.n_peaks, device=device))
-
     def forward(self):
-        dist = torch.cdist(self.z, self.w, p=2)  # [cells, peaks]
-        logits = self.global_bias + self.cell_bias[:, None] + self.peak_bias[None, :] - dist
+        dist = torch.cdist(self.embed_cells, self.embed_features, p=2)
+        logits = (
+            self.global_bias
+            + self.cell_bias[:, None]
+            + self.feature_bias[None, :]
+            - dist
+        )
         return logits
 
-    def get_probabilities(self):
+    def probabilities(self):
         return torch.sigmoid(self.forward())
-
-    def loss(self, pos_weight=None):
-        logits = self.forward()
-        if pos_weight is not None:
-            criterion = nn.BCEWithLogitsLoss(pos_weight=pos_weight)
-        else:
-            criterion = nn.BCEWithLogitsLoss()
-        return criterion(logits, self.Aij)
-
-    def fit(self):
-        optimizer = torch.optim.Adam(self.parameters(), lr=self.lr)
-        losses = []
-
-        # optional: compute positive class weight
-        n_pos = self.Aij.sum()
-        n_neg = self.Aij.numel() - n_pos
-        pos_weight = (n_neg / (n_pos + 1e-8)).detach()
-
-        for epoch in range(self.n_epochs):
-            optimizer.zero_grad()
-            loss = self.loss(pos_weight=pos_weight)
-            loss.backward()
-            optimizer.step()
-
-            losses.append(loss.item())
-            print(f"Epoch {epoch+1}/{self.n_epochs}, Loss: {loss.item():.4f}")
-
-        return losses
-
-    def get_embeddings(self):
-        return (
-            self.z.detach().cpu().numpy(),
-            self.w.detach().cpu().numpy()
-        )
