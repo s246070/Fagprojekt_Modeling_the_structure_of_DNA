@@ -1,63 +1,90 @@
-from dna_modelling.model import Model
-from dna_modelling.data import Data
 import torch
 import torch.nn as nn
+import matplotlib.pyplot as plt
 
-
-
-
-def TrainModel(model,train_dataloader, epochs=1,val_dataloader=None, device=None, threads=1, loss_fn=ordinal_cross_entropy_loss(), optimizer= Adam()):
-    """Trains the model for a given number of epochs.
-    
-    Args:
-        model: The Latent distance model to be trained.
-        train_dataloader: The dataloader for the training data.
-        epochs: The number of epochs to train for.
-        val_dataloader: The dataloader for the validation data (optional).
-        device: The device to train on (optional).
-        threads: The number of threads to use for training (optional).
-    
-    Returns:
-        A tuple containing the training accuracy, validation accuracy, training loss, and validation loss.
-    """
-    
-    
-    torch.set_number_of_threads(threads) # brug denne til at sætte antal tråde.
+def TrainModel(model, device="cpu", threads=1):
+    torch.set_num_threads(threads)
+    model.to(device)
     model.train()
 
-    if device is None:
-        device = "cuda" if torch.cuda.is_available() else "cpu"
-    
-    model.to(device)
+    optimizer = torch.optim.Adam(model.parameters(), lr=model.lr)
 
-    train_acc = []
-    test_acc = []
-    train_loss = []
-    val_loss = []
+    # Class imbalance handling
+    n_pos = model.Aij.sum()
+    n_neg = model.Aij.numel() - n_pos
+    pos_weight = (n_neg / (n_pos + 1e-8)).to(device)
 
-    for epoch in range(epochs):
-        epoch_train_loss = 0
-        epoch_train_acc = 0
+    criterion = nn.BCEWithLogitsLoss(pos_weight=pos_weight)
 
-        for batch in train_dataloader:
-            batch = {k: v.to(device) for k, v in batch.items()}
-            loss, acc = model.training_step(batch)
-            epoch_train_loss += loss.item()
-            epoch_train_acc += acc.item()
+    losses = []
+    losses_per_interval = []
+    for epoch in range(model.epochs):
+        optimizer.zero_grad()
 
-        train_acc.append(epoch_train_acc / len(train_dataloader))
-        train_loss.append(epoch_train_loss / len(train_dataloader))
+        logits = model()
+        loss = criterion(logits, model.Aij)
+        loss.backward()
+        optimizer.step()
+        
+        losses.append(loss.item())
 
-        if val_dataloader is not None:
-            epoch_val_loss = 0
-            epoch_val_acc = 0
+        if epoch %10_000 == 0:
+            print(f"Epoch {epoch}/{model.epochs} | Loss: {loss.item():.4f}")
+            losses_per_interval.append(loss.item())
 
-            with torch.no_grad():
-                for batch in val_dataloader:
-                    batch = {k: v.to(device) for k, v in batch.items()}
-                    loss, acc = model.validation_step(batch)
-                    epoch_val_loss += loss.item()
-                    epoch_val_acc += acc.item()
 
-            test_acc.append(epoch_val_acc / len(val_dataloader))
-            val_loss.append(epoch_val_loss / len(val_dataloader))
+        if epoch %100_000 == 0 and epoch != 0:
+            torch.save(model.state_dict(),f'models/model_{epoch}')
+
+            cell_embeddings = model.embed_cells.detach().cpu().numpy()
+            peak_embeddings = model.embed_features.detach().cpu().numpy()
+            plt.figure(figsize=(7, 6))
+
+            plt.scatter(cell_embeddings[:, 0], cell_embeddings[:, 1],
+                        s=5, alpha=0.7, color="blue", label="Cells")
+
+            plt.scatter(peak_embeddings[:, 0], peak_embeddings[:, 1],
+                        s=5, alpha=0.7, color="red", label="Peaks")
+
+            plt.xlabel("Latent dim 1")
+            plt.ylabel("Latent dim 2")
+            plt.title("Cell & Peak latent space")
+            plt.legend()
+
+            plt.savefig(f"plots/latent_space{epoch}.png", dpi=300)
+
+            plt.figure(figsize=(7, 6))
+
+            plt.scatter(cell_embeddings[:, 0], cell_embeddings[:, 1],
+                        s=5, alpha=0.7, color="blue", label="Cells")
+
+            plt.xlabel("Latent dim 1")
+            plt.ylabel("Latent dim 2")
+            plt.title("Cell latent space")
+            plt.legend()
+
+            plt.savefig(f"plots/latent_space_cells_{epoch}.png", dpi=300)
+
+            plt.figure(figsize=(7, 6))
+
+            plt.scatter(peak_embeddings[:, 0], peak_embeddings[:, 1],
+                        s=5, alpha=0.7, color="red", label="Peaks")
+
+            plt.xlabel("Latent dim 1")
+            plt.ylabel("Latent dim 2")
+            plt.title("Peak latent space")
+            plt.legend()
+
+            plt.savefig(f"plots/latent_space_peaks_{epoch}.png", dpi=300)
+
+
+            plt.figure(figsize=(7,6))
+            plt.plot(losses_per_interval)
+            plt.xlabel("Training step")
+            plt.ylabel("Loss")
+            plt.title("Training Loss")
+            plt.grid(True)
+
+            plt.savefig("plots/loss_curve.png", dpi=300)
+            plt.close()
+    return losses
