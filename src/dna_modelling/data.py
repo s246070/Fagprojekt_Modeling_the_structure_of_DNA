@@ -1,6 +1,8 @@
 from pathlib import Path
 from urllib.request import urlretrieve
 import scanpy as sc
+import scipy.sparse as sp
+import torch
 
 """
 This class is responsible for downloading and loading the data. 
@@ -39,3 +41,25 @@ class Data():
         if backed:
             return sc.read_h5ad(self.data_path, backed="r")
         return sc.read_h5ad(self.data_path)
+
+    def anndata_to_tensor(self, adata, device, make_binary=True):
+        X = adata.X
+
+        # Load into memory if backed/lazy
+        if hasattr(X, "__getitem__") and not isinstance(X, (list, tuple)):
+            try:
+                X = X[:]
+            except Exception:
+                pass
+
+        # Convert sparse to dense
+        if sp.issparse(X):
+            X = X.toarray()
+
+        # Convert to tensor
+        X = torch.as_tensor(X, dtype=torch.float32, device=device)
+
+        if make_binary:
+            X = (X > 0).float()
+
+        return X

@@ -1,16 +1,52 @@
-from torch import nn
 import torch
+import torch.nn as nn
 
-class Model(nn.Module):
-    """Just a dummy model to show how to structure your code"""
-    def __init__(self):
+class LDM(nn.Module):
+    """
+    Binary latent distance model for cell x peak accessibility matrices.
+    """
+    def __init__(self, data, ls_dim, device, epochs, lr, seed=None):
         super().__init__()
-        self.layer = nn.Linear(1, 1)
+        self.Aij = data.float().to(device)
+        self.ls_dim = ls_dim
+        self.device = device
 
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        return self.layer(x)
+        self.cells, self.features = self.Aij.shape
+        self.epochs = epochs
+        self.lr = lr
 
-if __name__ == "__main__":
-    model = Model()
-    x = torch.rand(1)
-    print(f"Output shape of model: {model(x).shape}")
+        self.seed = seed
+        self.__set_seed(seed)
+
+        # Latent embeddings
+        self.embed_cells = nn.Parameter(
+            torch.randn(self.cells, self.ls_dim, device=device) * 0.01
+        )
+        self.embed_features = nn.Parameter(
+            torch.randn(self.features, self.ls_dim, device=device) * 0.01
+        )
+
+        # Bias terms
+        self.global_bias = nn.Parameter(torch.zeros(1, device=device))
+        self.cell_bias = nn.Parameter(torch.zeros(self.cells, device=device))
+        self.feature_bias = nn.Parameter(torch.zeros(self.features, device=device))
+
+        print("Class initialized")
+    def __set_seed(self, seed):
+        if seed is not None:
+            torch.manual_seed(seed)
+            if torch.cuda.is_available():
+                torch.cuda.manual_seed_all(seed)
+
+    def forward(self):
+        dist = torch.cdist(self.embed_cells, self.embed_features, p=2)
+        logits = (
+            self.global_bias
+            + self.cell_bias[:, None]
+            + self.feature_bias[None, :]
+            - dist
+        )
+        return logits
+
+    def probabilities(self):
+        return torch.sigmoid(self.forward())
