@@ -19,10 +19,10 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "numpy==1.26.4",
+    "matplotlib>=3.10.0",
     "scanpy>=1.11.5",
-    "scikit-learn>=1.8.0",
-    "torch==2.6.0",
-    "torchvision==0.21.0",
+    "scipy>=1.16.0",
+    "torch==2.10.0+cu126",
     "tqdm==4.67.1",
 ]
 
@@ -44,5 +44,10 @@ line-length = 120
 
 [dependency-groups]
 dev = [
+    "coverage>=7.10.6",
+    "invoke>=2.2.1",
+    "mkdocs>=1.6.1",
+    "pre-commit>=4.3.0",
+    "pytest>=8.4.2",
     "ruff>=0.15.4",
 ]
