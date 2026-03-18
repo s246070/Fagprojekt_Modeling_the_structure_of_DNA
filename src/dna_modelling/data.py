@@ -46,3 +46,4 @@ class Data():
             X = (X > 0).float()
 
         return X
+        
