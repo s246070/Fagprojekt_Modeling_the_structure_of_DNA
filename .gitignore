@@ -181,3 +181,9 @@ data/
 uv.lock
 
 models/
+
+plots/
+
+# Logs
+*.err
+*.out
