@@ -27,7 +27,6 @@ class LDM(nn.Module):
         )
 
         # Bias terms
-        self.global_bias = nn.Parameter(torch.zeros(1, device=device))
         self.cell_bias = nn.Parameter(torch.zeros(self.cells, device=device))
         self.feature_bias = nn.Parameter(torch.zeros(self.features, device=device))
 
@@ -41,8 +40,7 @@ class LDM(nn.Module):
     def forward(self):
         dist = torch.cdist(self.embed_cells, self.embed_features, p=2)
         logits = (
-            self.global_bias
-            + self.cell_bias[:, None]
+            self.cell_bias[:, None]
             + self.feature_bias[None, :]
             - dist
         )

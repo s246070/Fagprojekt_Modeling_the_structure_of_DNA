@@ -63,3 +63,10 @@ class Data():
             X = (X > 0).float()
 
         return X
+    
+
+
+if __name__ == "__main__":
+    data = Data()
+    adata = data.load_data(backed=True)
+    print(adata)
