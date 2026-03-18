@@ -20,7 +20,7 @@ model = LDM(
     data=Aij,
     ls_dim=2,
     device=device,
-    epochs=1_000_000,
+    epochs=10_001,
     lr=1e-3,
     seed=42
 )

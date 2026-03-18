@@ -28,12 +28,12 @@ def TrainModel(model, device="cpu", threads=1):
         
         losses.append(loss.item())
 
-        if epoch %10_000 == 0:
+        if epoch %100 == 0:
             print(f"Epoch {epoch}/{model.epochs} | Loss: {loss.item():.4f}")
             losses_per_interval.append(loss.item())
 
 
-        if epoch %100_000 == 0 and epoch != 0:
+        if epoch %1_000 == 0 and epoch != 0:
             torch.save(model.state_dict(),f'models/model_{epoch}')
 
             cell_embeddings = model.embed_cells.detach().cpu().numpy()
@@ -85,6 +85,6 @@ def TrainModel(model, device="cpu", threads=1):
             plt.title("Training Loss")
             plt.grid(True)
 
-            plt.savefig("plots/loss_curve.png", dpi=300)
+            plt.savefig("plots/loss_curve3.png", dpi=300)
             plt.close()
     return losses

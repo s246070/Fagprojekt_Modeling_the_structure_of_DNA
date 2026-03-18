@@ -9,12 +9,8 @@ import numpy as np
 import scipy.sparse as sp
 import igraph as ig
 from scipy.sparse import csr_matrix
-from sklearn.neighbors import kneighbors_graph
 import scanpy as sc
-import numpy as np
-import pandas as pd
 import matplotlib.pyplot as plt
-import seaborn as sns
 from pathlib import Path
 
 
