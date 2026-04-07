@@ -1,6 +1,7 @@
 from data import Data
 from model import LDM
 from train import TrainModel
+from evaluate import make_test_set, evaluate
 import torch
 import matplotlib.pyplot as plt
 
@@ -15,6 +16,8 @@ print("data added")
 # Convert AnnData.X to tensor
 Aij = data_loader.anndata_to_tensor(adata, device=device, make_binary=True)
 
+Aij, targets = data_loader.make_test_set(Aij, percentage=0.1)
+
 # Initialize model
 model = LDM(
     data=Aij,
@@ -28,6 +31,9 @@ model = LDM(
 print("beginning training")
 # Train
 losses = TrainModel(model, device=device, threads=6)
+
+auc, auc_data = evaluate(model, Aij, targets)
+print(f"AUROC: {auc:.4f}")
 
 print("plotting")
 cell_embeddings = model.embed_cells.detach().cpu().numpy()
