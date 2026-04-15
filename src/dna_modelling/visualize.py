@@ -12,7 +12,7 @@ from scipy.sparse import csr_matrix
 import scanpy as sc
 import matplotlib.pyplot as plt
 from pathlib import Path
-
+import umap
 
 #Change what graph you want printed: 1 is for the bipartite graph, 2 is for the latent space visualization
 graph_to_print = 2
@@ -129,3 +129,87 @@ elif graph_to_print == 2:
 
     print(f"Saved latent-space figure to: {output_path}")
 
+def plot_latent_embeddings(model, ls_dim, epoch):
+    Path("plots").mkdir(parents=True, exist_ok=True)
+
+    reducer = umap.UMAP(
+        n_neighbors=15,
+        min_dist=0.1,
+        n_components=2,
+        metric="euclidean",
+    )
+
+    cell_embeddings = model.embed_cells.detach().cpu().numpy()
+    peak_embeddings = model.embed_features.detach().cpu().numpy()
+    stacked_embeddings = np.vstack([cell_embeddings, peak_embeddings])
+    stacked_embeddings_2d = reducer.fit_transform(stacked_embeddings)
+
+    n_cells = cell_embeddings.shape[0]
+    cell_embeddings_2d = stacked_embeddings_2d[:n_cells]
+    peak_embeddings_2d = stacked_embeddings_2d[n_cells:]
+
+    plt.figure(figsize=(7, 6))
+    plt.scatter(
+        cell_embeddings_2d[:, 0],
+        cell_embeddings_2d[:, 1],
+        s=5,
+        alpha=0.7,
+        color="blue",
+        label="Cells",
+    )
+    plt.scatter(
+        peak_embeddings_2d[:, 0],
+        peak_embeddings_2d[:, 1],
+        s=5,
+        alpha=0.7,
+        color="red",
+        label="Peaks",
+    )
+    plt.xlabel("Latent dim 1")
+    plt.ylabel("Latent dim 2")
+    plt.title(f"Cell & Peak latent space (ls_dim={ls_dim})")
+    plt.legend()
+    plt.savefig(f"plots/latent_space_ls{ls_dim}_{epoch}.png", dpi=300)
+    plt.close()
+
+    plt.figure(figsize=(7, 6))
+    plt.scatter(
+        cell_embeddings_2d[:, 0],
+        cell_embeddings_2d[:, 1],
+        s=5,
+        alpha=0.7,
+        color="blue",
+        label="Cells",
+    )
+    plt.xlabel("Latent dim 1")
+    plt.ylabel("Latent dim 2")
+    plt.title(f"Cell latent space (ls_dim={ls_dim})")
+    plt.legend()
+    plt.savefig(f"plots/latent_space_cells_ls{ls_dim}_{epoch}.png", dpi=300)
+    plt.close()
+
+    plt.figure(figsize=(7, 6))
+    plt.scatter(
+        peak_embeddings_2d[:, 0],
+        peak_embeddings_2d[:, 1],
+        s=5,
+        alpha=0.7,
+        color="red",
+        label="Peaks",
+    )
+    plt.xlabel("Latent dim 1")
+    plt.ylabel("Latent dim 2")
+    plt.title(f"Peak latent space (ls_dim={ls_dim})")
+    plt.legend()
+    plt.savefig(f"plots/latent_space_peaks_ls{ls_dim}_{epoch}.png", dpi=300)
+    plt.close()
+
+def plot_loss_curve(ls_dim, interval_steps, losses_per_interval):
+    plt.figure(figsize=(7, 6))
+    plt.plot(interval_steps, losses_per_interval)
+    plt.xlabel("Training step")
+    plt.ylabel("Loss")
+    plt.title(f"Training Loss (ls_dim={ls_dim})")
+    plt.grid(True)
+    plt.savefig(f"plots/loss_curve_ls{ls_dim}.png", dpi=300)
+    plt.close()
