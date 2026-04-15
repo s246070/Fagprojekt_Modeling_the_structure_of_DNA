@@ -4,9 +4,11 @@ import torch
 def make_test_set(Aij, percentage=0.1):
     """
     Creates a test set by randomly removing a percentage of the connections in the Aij matrix.
+    
     Args:
         Aij: The original cell x peak accessibility matrix (tensor).
         percentage: The percentage of connections to remove for the test set.
+    
     Returns:
         A modified Aij matrix with some connections removed, and a list of the removed connections (targets).
     """
@@ -25,7 +27,6 @@ def make_test_set(Aij, percentage=0.1):
 
 def evaluate(model, Aij, targets, increment=0.001):
     """
-
     Evaluates the accuracy of predictions against the removed connections.
 
     Args:
@@ -37,7 +38,6 @@ def evaluate(model, Aij, targets, increment=0.001):
     Returns:
         A list of tuples (FPR, TPR) for different thresholds, which can be used to plot an AUROC curve.
     """
-    
     if increment <= 0:
         raise ValueError("increment must be greater than 0")
 
@@ -45,12 +45,14 @@ def evaluate(model, Aij, targets, increment=0.001):
     if targets:
         target_indices = torch.as_tensor(targets, device=Aij.device, dtype=torch.long)
         target_mask[target_indices[:, 0], target_indices[:, 1]] = True
+    
     negative_mask = (Aij == 0) & (~target_mask)
     probabilities = model.probabilities()
 
     # Make AUROC curve data
     auroc_data = []
     thresholds = torch.arange(0.0, 1.0 + increment, increment, device=probabilities.device)
+    
     for threshold in thresholds.tolist():
         if threshold > 1.0:
             continue
