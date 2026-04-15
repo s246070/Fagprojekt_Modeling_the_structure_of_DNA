@@ -23,6 +23,9 @@ def plot_bipartite_graph(adata, output_path, max_cells_plot=120, max_features_pl
         max_cells_plot: Maximum number of cell nodes to include in the plot.
         max_features_plot: Maximum number of feature nodes to include in the plot.
 
+    Attributes:
+         graph: The constructed igraph.Graph object representing the bipartite graph.
+
     Returns:
         The constructed igraph.Graph object.
     """
