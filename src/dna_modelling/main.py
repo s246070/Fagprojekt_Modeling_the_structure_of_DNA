@@ -10,6 +10,10 @@ print("imported evaluate")
 import torch
 print("imported torch")
 import matplotlib.pyplot as plt
+#import os
+import os
+# get latent space dimension from environment variable in main.lsf, default to 8 if not set
+ls_dim = int(os.getenv("LS_DIM", 2))
 
 print("everything is imported!")
 device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -27,7 +31,7 @@ Aij, targets = make_test_set(Aij, percentage=0.1)
 # Initialize model
 model = LDM(
     data=Aij,
-    ls_dim=4,
+    ls_dim=ls_dim,
     device=device,
     epochs=6_001,
     lr=1e-3,
