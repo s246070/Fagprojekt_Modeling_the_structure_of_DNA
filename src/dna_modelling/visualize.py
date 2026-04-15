@@ -14,8 +14,8 @@ import matplotlib.pyplot as plt
 from pathlib import Path
 
 
-#Change what graph you want printed 1 is for the bipartite graph, 2 is for the latent space visualization
-graph_to_print = 1
+#Change what graph you want printed: 1 is for the bipartite graph, 2 is for the latent space visualization
+graph_to_print = 2
 
 
 if graph_to_print == 1:
