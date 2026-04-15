@@ -30,11 +30,14 @@ def evaluate(model, Aij, targets, increment=0.001):
 
     Args:
         model: The trained LDM model.
+        Aij: The modified cell x peak accessibility matrix with some connections removed (tensor).
         targets: A list of tuples (cell_index, peak_index) representing the removed connections.
+        increment: Amount of steps between 0 and 1 for calculating TPR and FPR at different thresholds (default: 0.001).
 
     Returns:
         A list of tuples (FPR, TPR) for different thresholds, which can be used to plot an AUROC curve.
     """
+    
     if increment <= 0:
         raise ValueError("increment must be greater than 0")
 
