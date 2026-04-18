@@ -1,18 +1,16 @@
 """Create a latent-space visualization from node and edge CSV files."""
 
 from __future__ import annotations
-
 import argparse
 import csv
 from dataclasses import dataclass
 from pathlib import Path
-
 import matplotlib.pyplot as plt
-
 
 @dataclass
 class Node:
-    """Store node attributes for plotting.
+    """
+    Store node attributes for plotting.
 
     Attributes:
         node_id: Unique node identifier.
@@ -20,30 +18,28 @@ class Node:
         x: X coordinate in latent space.
         y: Y coordinate in latent space.
     """
-
     node_id: str
     label: str
     x: float
     y: float
 
-
 @dataclass
 class Edge:
-    """Store edge attributes for plotting.
+    """
+    Store edge attributes for plotting.
 
     Attributes:
         source: Source node ID.
         target: Target node ID.
         weight: Edge weight.
     """
-
     source: str
     target: str
     weight: float
 
-
 def load_nodes(nodes_path: Path) -> dict[str, Node]:
-    """Load node data from CSV.
+    """
+    Load node data from CSV.
 
     Args:
         nodes_path: Path to node CSV file.
@@ -51,7 +47,6 @@ def load_nodes(nodes_path: Path) -> dict[str, Node]:
     Returns:
         Mapping from node ID to Node.
     """
-
     nodes: dict[str, Node] = {}
     with nodes_path.open(newline="", encoding="utf-8") as csv_file:
         reader = csv.DictReader(csv_file)
@@ -65,9 +60,9 @@ def load_nodes(nodes_path: Path) -> dict[str, Node]:
             nodes[node.node_id] = node
     return nodes
 
-
 def load_edges(edges_path: Path) -> list[Edge]:
-    """Load edge data from CSV.
+    """
+    Load edge data from CSV.
 
     Args:
         edges_path: Path to edge CSV file.
@@ -75,7 +70,6 @@ def load_edges(edges_path: Path) -> list[Edge]:
     Returns:
         List of edges.
     """
-
     edges: list[Edge] = []
     with edges_path.open(newline="", encoding="utf-8") as csv_file:
         reader = csv.DictReader(csv_file)
@@ -89,16 +83,15 @@ def load_edges(edges_path: Path) -> list[Edge]:
             )
     return edges
 
-
 def plot_latent_space(nodes: dict[str, Node], edges: list[Edge], output_path: Path) -> None:
-    """Create and save latent space plot.
+    """
+    Create and save latent space plot.
 
     Args:
         nodes: Mapping of node IDs to nodes.
         edges: List of weighted edges.
         output_path: Path where the figure is written.
     """
-
     fig, ax = plt.subplots(figsize=(9, 7))
 
     for edge in edges:
@@ -146,10 +139,10 @@ def plot_latent_space(nodes: dict[str, Node], edges: list[Edge], output_path: Pa
     fig.savefig(output_path, dpi=180)
     plt.close(fig)
 
-
 def parse_args() -> argparse.Namespace:
-    """Parse command-line arguments."""
-
+    """
+    Parse command-line arguments.
+    """
     parser = argparse.ArgumentParser(description="Visualize latent-space nodes and edges from CSV files.")
     parser.add_argument(
         "--nodes",
@@ -171,10 +164,10 @@ def parse_args() -> argparse.Namespace:
     )
     return parser.parse_args()
 
-
 def main() -> None:
-    """Run CLI for latent-space visualization."""
-
+    """
+    Run CLI for latent-space visualization.
+    """
     args = parse_args()
     nodes = load_nodes(args.nodes)
     edges = load_edges(args.edges)
