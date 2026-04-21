@@ -51,6 +51,7 @@ def evaluate(model, Aij, targets, increment=0.001):
 
     # Make AUROC curve data
     auroc_data = []
+    f1_data = []
     thresholds = torch.arange(0.0, 1.0 + increment, increment, device=probabilities.device)
     
     for threshold in thresholds.tolist():
@@ -68,10 +69,16 @@ def evaluate(model, Aij, targets, increment=0.001):
         fpr = false_positives / (false_positives + true_negatives) if (false_positives + true_negatives) > 0 else 0
 
         auroc_data.append((fpr, tpr))
-        
+
+        # Calculate F1 score for the current threshold
+        precision = true_positives / (true_positives + false_positives) if (true_positives + false_positives) > 0 else 0
+        recall = tpr
+        f1 = 2 * (precision * recall) / (precision + recall) if (precision + recall) > 0 else 0
+        f1_data.append((threshold, f1))
+
     # Calculate the area under the curve (AUC) using the trapezoidal rule
     if not auroc_data:
-        return 0.0, auroc_data
+        return 0.0, auroc_data, f1_data
 
     curve_tensor = torch.tensor(auroc_data, dtype=torch.float32)
     sorted_indices = torch.argsort(curve_tensor[:, 0])
@@ -79,4 +86,4 @@ def evaluate(model, Aij, targets, increment=0.001):
     tpr_sorted = curve_tensor[sorted_indices, 1]
     auc = torch.trapz(tpr_sorted, fpr_sorted).item()
 
-    return auc, auroc_data
+    return auc, auroc_data, f1_data
