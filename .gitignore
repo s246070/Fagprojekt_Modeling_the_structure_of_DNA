@@ -182,3 +182,9 @@ uv.lock
 uv
 
 models/
+
+plots/
+
+# Logs
+*.err
+*.out

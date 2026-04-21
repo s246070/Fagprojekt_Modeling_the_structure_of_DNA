@@ -1,15 +1,39 @@
 import torch
 import torch.nn as nn
-import matplotlib.pyplot as plt
+from pathlib import Path
+
+from visualize import plot_latent_embeddings
+from visualize import plot_loss_curve
+
 
 def TrainModel(model, device="cpu", threads=1):
+    """
+    Train the DNA sequence embedding model.
+
+    Args:
+        model: The DNA sequence embedding model to be trained.
+        device: The device to run the training on (e.g., 'cpu' or 'cuda').
+        threads: The number of CPU threads to use for training.
+
+    Attributes:
+        optimizer: The optimizer used for training the model.
+        criterion: The loss function used for training the model.
+        losses: A list to store the loss values for each epoch.
+        losses_per_interval: A list to store the loss values at specified intervals.
+        interval_steps: A list to store the epoch numbers at specified intervals.
+        ls_dim: The dimension of the latent space used in the model.
+        
+    Returns:
+        A list of loss values for each epoch during training.
+
+    """
     torch.set_num_threads(threads)
     model.to(device)
     model.train()
+    Path("plots").mkdir(parents=True, exist_ok=True)
 
     optimizer = torch.optim.Adam(model.parameters(), lr=model.lr)
 
-    # Class imbalance handling
     n_pos = model.Aij.sum()
     n_neg = model.Aij.numel() - n_pos
     pos_weight = (n_neg / (n_pos + 1e-8)).to(device)
@@ -18,6 +42,9 @@ def TrainModel(model, device="cpu", threads=1):
 
     losses = []
     losses_per_interval = []
+    interval_steps = []
+    ls_dim = model.ls_dim
+
     for epoch in range(model.epochs):
         optimizer.zero_grad()
 
@@ -25,66 +52,26 @@ def TrainModel(model, device="cpu", threads=1):
         loss = criterion(logits, model.Aij)
         loss.backward()
         optimizer.step()
-        
+
         losses.append(loss.item())
 
-        if epoch %10_000 == 0:
+        if epoch % 100 == 0:
             print(f"Epoch {epoch}/{model.epochs} | Loss: {loss.item():.4f}")
             losses_per_interval.append(loss.item())
+            interval_steps.append(epoch)
 
+        if epoch % 1_000 == 0 and epoch != 0:
+            plot_latent_embeddings(
+                model=model,
+                ls_dim=ls_dim,
+                epoch=epoch,
+                interval_steps=interval_steps,
+                losses_per_interval=losses_per_interval,
+            )
+            plot_loss_curve(
+                ls_dim=ls_dim,
+                interval_steps=interval_steps,
+                losses_per_interval=losses_per_interval,
+            )
 
-        if epoch %100_000 == 0 and epoch != 0:
-            torch.save(model.state_dict(),f'models/model_{epoch}')
-
-            cell_embeddings = model.embed_cells.detach().cpu().numpy()
-            peak_embeddings = model.embed_features.detach().cpu().numpy()
-            plt.figure(figsize=(7, 6))
-
-            plt.scatter(cell_embeddings[:, 0], cell_embeddings[:, 1],
-                        s=5, alpha=0.7, color="blue", label="Cells")
-
-            plt.scatter(peak_embeddings[:, 0], peak_embeddings[:, 1],
-                        s=5, alpha=0.7, color="red", label="Peaks")
-
-            plt.xlabel("Latent dim 1")
-            plt.ylabel("Latent dim 2")
-            plt.title("Cell & Peak latent space")
-            plt.legend()
-
-            plt.savefig(f"plots/latent_space{epoch}.png", dpi=300)
-
-            plt.figure(figsize=(7, 6))
-
-            plt.scatter(cell_embeddings[:, 0], cell_embeddings[:, 1],
-                        s=5, alpha=0.7, color="blue", label="Cells")
-
-            plt.xlabel("Latent dim 1")
-            plt.ylabel("Latent dim 2")
-            plt.title("Cell latent space")
-            plt.legend()
-
-            plt.savefig(f"plots/latent_space_cells_{epoch}.png", dpi=300)
-
-            plt.figure(figsize=(7, 6))
-
-            plt.scatter(peak_embeddings[:, 0], peak_embeddings[:, 1],
-                        s=5, alpha=0.7, color="red", label="Peaks")
-
-            plt.xlabel("Latent dim 1")
-            plt.ylabel("Latent dim 2")
-            plt.title("Peak latent space")
-            plt.legend()
-
-            plt.savefig(f"plots/latent_space_peaks_{epoch}.png", dpi=300)
-
-
-            plt.figure(figsize=(7,6))
-            plt.plot(losses_per_interval)
-            plt.xlabel("Training step")
-            plt.ylabel("Loss")
-            plt.title("Training Loss")
-            plt.grid(True)
-
-            plt.savefig("plots/loss_curve.png", dpi=300)
-            plt.close()
     return losses

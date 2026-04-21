@@ -1,25 +1,25 @@
-#BSUB -J Main_LCB
-#BSUB -o Main_LCB%J.out
-#BSUB -e Main_LCB%J.err
+#BSUB -J Main_Script_12dima
+#BSUB -o Main_Script_12dima%J.out
+#BSUB -e Main_Script_12dima%J.err
 #BSUB -n 6
-#BSUB -q gpuv100
+#BSUB -q gpua100
 #BSUB -gpu "num=1:mode=exclusive_process"
 #BSUB -R "rusage[mem=1100]"
 #BSUB -R "span[hosts=1]"
-#BSUB -W 20:00
+#BSUB -W 08:00
 # end of BSUB options
 
 #!/bin/bash
 cd "$LS_SUBCWD" || exit 1
 
 module purge
-module load cuda/12.6
+module load cuda/12.8.0
 module load python3/3.12.11
-module load cudnn/v9.6.0.74-prod-cuda-12.X
 
 source .venv/bin/activate
 
 export OMP_NUM_THREADS=4
 export MKL_NUM_THREADS=4
 
+export LS_DIM=12
 python src/dna_modelling/main.py
