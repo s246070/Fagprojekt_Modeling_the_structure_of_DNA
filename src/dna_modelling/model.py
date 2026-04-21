@@ -50,3 +50,6 @@ class LDM(nn.Module):
 
     def probabilities(self):
         return torch.sigmoid(self.forward())
+
+    def save_model(self, path):
+        torch.save(self.state_dict(), path)
