@@ -179,6 +179,7 @@ cython_debug/
 data/
 
 uv.lock
+uv
 
 models/
 

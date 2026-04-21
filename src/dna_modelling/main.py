@@ -38,3 +38,5 @@ plt.xlabel("Latent dim 1")
 plt.ylabel("Latent dim 2")
 plt.title("Cell latent space")
 plt.savefig("latent_space_10000.png", dpi=300)
+
+model.save_model(f"ldm_model_{ls_dim}.pth")
