@@ -1,13 +1,13 @@
 import os
-os.environ["MPLBACKEND"] = "TkAgg"
+# os.environ["MPLBACKEND"] = "TkAgg"
 
 import matplotlib
-matplotlib.use("TkAgg", force=True)
+# matplotlib.use("TkAgg", force=True)
 
 import numpy as np
 import scipy.sparse as sp
-import igraph as ig
-from scipy.sparse import csr_matrix
+# import igraph as ig
+# from scipy.sparse import csr_matrix
 import scanpy as sc
 import matplotlib.pyplot as plt
 from pathlib import Path
@@ -123,6 +123,63 @@ def plot_latent_embeddings(model, ls_dim, epoch):
     cell_embeddings_2d = stacked_embeddings_2d[:n_cells]
     peak_embeddings_2d = stacked_embeddings_2d[n_cells:]
 
+    plt.figure(figsize=(7, 6))
+    plt.scatter(
+        cell_embeddings_2d[:, 0],
+        cell_embeddings_2d[:, 1],
+        s=5,
+        alpha=0.7,
+        color="blue",
+        label="Cells",
+    )
+    plt.scatter(
+        peak_embeddings_2d[:, 0],
+        peak_embeddings_2d[:, 1],
+        s=5,
+        alpha=0.7,
+        color="red",
+        label="Peaks",
+    )
+    plt.xlabel("Latent dim 1")
+    plt.ylabel("Latent dim 2")
+    plt.title(f"Cell & Peak latent space (ls_dim={ls_dim})")
+    plt.legend()
+    plt.savefig(f"plots/latent_space_ls{ls_dim}_{epoch}.png", dpi=300)
+    plt.close()
+
+    plt.figure(figsize=(7, 6))
+    plt.scatter(
+        cell_embeddings_2d[:, 0],
+        cell_embeddings_2d[:, 1],
+        s=5,
+        alpha=0.7,
+        color="blue",
+        label="Cells",
+    )
+    plt.xlabel("Latent dim 1")
+    plt.ylabel("Latent dim 2")
+    plt.title(f"Cell latent space (ls_dim={ls_dim})")
+    plt.legend()
+    plt.savefig(f"plots/latent_space_cells_ls{ls_dim}_{epoch}.png", dpi=300)
+    plt.close()
+
+    plt.figure(figsize=(7, 6))
+    plt.scatter(
+        peak_embeddings_2d[:, 0],
+        peak_embeddings_2d[:, 1],
+        s=5,
+        alpha=0.7,
+        color="red",
+        label="Peaks",
+    )
+    plt.xlabel("Latent dim 1")
+    plt.ylabel("Latent dim 2")
+    plt.title(f"Peak latent space (ls_dim={ls_dim})")
+    plt.legend()
+    plt.savefig(f"plots/latent_space_peaks_ls{ls_dim}_{epoch}.png", dpi=300)
+    plt.close()
+
+def plot_embeddings(model, ls_dim, epoch):
     plt.figure(figsize=(7, 6))
     plt.scatter(
         cell_embeddings_2d[:, 0],

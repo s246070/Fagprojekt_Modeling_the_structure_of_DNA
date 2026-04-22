@@ -45,7 +45,7 @@ model = LDM(
 print("beginning training")
 
 # Train
-losses = TrainModel(model, device=device, threads=6)
+losses = TrainModel(model, device=device, plots=False)
 
 print("training complete")
 
