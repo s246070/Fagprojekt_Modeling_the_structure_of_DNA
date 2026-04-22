@@ -20,7 +20,7 @@ model = LDM(
     data=Aij,
     ls_dim=2,
     device=device,
-    epochs=10_001,
+    epochs=1,
     lr=1e-3,
     seed=42
 )
@@ -31,6 +31,9 @@ losses = TrainModel(model, device=device, threads=6)
 
 print("plotting")
 cell_embeddings = model.embed_cells.detach().cpu().numpy()
+
+auc, auroc_data, f1_score = evaluate.validate(model, Aij, targets, target_zeros, increment=0.001)
+print(f"AUC: {auc:.4f} | F1 Score: {f1_score:.4f}")
 
 plt.figure(figsize=(7, 6))
 plt.scatter(cell_embeddings[:, 0], cell_embeddings[:, 1], s=5, alpha=0.7)
