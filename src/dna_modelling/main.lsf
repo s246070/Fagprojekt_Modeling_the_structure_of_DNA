@@ -1,9 +1,8 @@
-#BSUB -J Main_Script_12dima
-#BSUB -o Main_Script_12dima%J.out
-#BSUB -e Main_Script_12dima%J.err
-#BSUB -n 6
-#BSUB -q gpua100
-#BSUB -gpu "num=1:mode=exclusive_process"
+#BSUB -J Main_Script_2_dim
+#BSUB -o outfiles/Main_Script_2_dim%J.out
+#BSUB -e outfiles/Main_Script_2_dim%J.err
+#BSUB -q hpc
+#BSUB -n 12
 #BSUB -R "rusage[mem=1100]"
 #BSUB -R "span[hosts=1]"
 #BSUB -W 08:00
@@ -21,5 +20,5 @@ source .venv/bin/activate
 export OMP_NUM_THREADS=4
 export MKL_NUM_THREADS=4
 
-export LS_DIM=12
+export LS_DIM=2
 python src/dna_modelling/main.py

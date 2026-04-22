@@ -4,17 +4,17 @@ from pathlib import Path
 
 from visualize import plot_latent_embeddings
 from visualize import plot_loss_curve
+from visualize import plot_embeddings
+from evaluate import validate
 
-
-def TrainModel(model, device="cpu", threads=1):
+def TrainModel(model, device="cpu", plots=False):
     """
     Train the DNA sequence embedding model.
 
     Args:
         model: The DNA sequence embedding model to be trained.
         device: The device to run the training on (e.g., 'cpu' or 'cuda').
-        threads: The number of CPU threads to use for training.
-
+        plots: Whether to save visualization plots during training.
     Attributes:
         optimizer: The optimizer used for training the model.
         criterion: The loss function used for training the model.
@@ -27,7 +27,6 @@ def TrainModel(model, device="cpu", threads=1):
         A list of loss values for each epoch during training.
 
     """
-    torch.set_num_threads(threads)
     model.to(device)
     model.train()
     Path("plots").mkdir(parents=True, exist_ok=True)
@@ -55,23 +54,32 @@ def TrainModel(model, device="cpu", threads=1):
 
         losses.append(loss.item())
 
-        if epoch % 100 == 0:
-            print(f"Epoch {epoch}/{model.epochs} | Loss: {loss.item():.4f}")
+        if epoch % 50 == 0:
+            print(f"Epoch {epoch}/{model.epochs} | Loss: {loss.item():.4f} | AUC (100%): {validate(model, model.Aij, model.targets)[0]:.4f}")
             losses_per_interval.append(loss.item())
             interval_steps.append(epoch)
 
-        if epoch % 1_000 == 0 and epoch != 0:
-            plot_latent_embeddings(
-                model=model,
-                ls_dim=ls_dim,
-                epoch=epoch,
-                interval_steps=interval_steps,
-                losses_per_interval=losses_per_interval,
-            )
-            plot_loss_curve(
-                ls_dim=ls_dim,
-                interval_steps=interval_steps,
-                losses_per_interval=losses_per_interval,
-            )
+            if plots:
+                plot_loss_curve(
+                    ls_dim=ls_dim,
+                    interval_steps=interval_steps,
+                    losses_per_interval=losses_per_interval,
+                )
+                if model.ls_dim > 3:
+                    plot_latent_embeddings(
+                        model=model,
+                        ls_dim=ls_dim,
+                        epoch=epoch,
+                        interval_steps=interval_steps,
+                        losses_per_interval=losses_per_interval,
+                    )
+                else:
+                    plot_embeddings(
+                        model=model,
+                        ls_dim=ls_dim,
+                        epoch=epoch,
+                        interval_steps=interval_steps,
+                        losses_per_interval=losses_per_interval,
+                    )
 
     return losses
