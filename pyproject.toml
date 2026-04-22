@@ -23,26 +23,27 @@ dependencies = [
     # Intel/any macOS: last supported macOS x86 build line
     "torch==2.2.2; platform_system == 'Darwin'",
     "torchvision==0.17.2; platform_system == 'Darwin'",
-    # Linux: keep newer CUDA build
-    "torch==2.6.0; platform_system == 'Linux'",
-    "torchvision==0.21.0; platform_system == 'Linux'",
+    # Linux: explicitly pin cu128 wheels
+    "torch==2.7.1+cu128; platform_system == 'Linux'",
+    "torchvision==0.22.1+cu128; platform_system == 'Linux'",
     "tqdm==4.67.1",
     "scanpy>=1.9.0",
+    "umap-learn>=0.5.7",
     "llvmlite<0.46.0",
     "requests>=2.32.5",
 ]
 
 [tool.uv.sources]
 torch = [
-  { index = "pytorch-cu126", marker = "platform_system == 'Linux'" },
+  { index = "pytorch-cu128", marker = "platform_system == 'Linux'" },
 ]
 torchvision = [
-  { index = "pytorch-cu126", marker = "platform_system == 'Linux'" },
+  { index = "pytorch-cu128", marker = "platform_system == 'Linux'" },
 ]
 
 [[tool.uv.index]]
-name = "pytorch-cu126"
-url = "https://download.pytorch.org/whl/cu126"
+name = "pytorch-cu128"
+url = "https://download.pytorch.org/whl/cu128"
 explicit = true
 
 [tool.ruff]

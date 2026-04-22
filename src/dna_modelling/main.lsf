@@ -1,9 +1,8 @@
-#BSUB -J Main_LCB
-#BSUB -o Main_LCB%J.out
-#BSUB -e Main_LCB%J.err
-#BSUB -n 6
-#BSUB -q gpuv100
-#BSUB -gpu "num=1:mode=exclusive_process"
+#BSUB -J Main_Script_2_dim
+#BSUB -o outfiles/Main_Script_2_dim%J.out
+#BSUB -e outfiles/Main_Script_2_dim%J.err
+#BSUB -q hpc
+#BSUB -n 12
 #BSUB -R "rusage[mem=1100]"
 #BSUB -R "span[hosts=1]"
 #BSUB -W 08:00
@@ -13,13 +12,13 @@
 cd "$LS_SUBCWD" || exit 1
 
 module purge
-module load cuda/12.6
+module load cuda/12.8.0
 module load python3/3.12.11
-module load cudnn/v9.6.0.74-prod-cuda-12.X
 
 source .venv/bin/activate
 
 export OMP_NUM_THREADS=4
 export MKL_NUM_THREADS=4
 
+export LS_DIM=2
 python src/dna_modelling/main.py

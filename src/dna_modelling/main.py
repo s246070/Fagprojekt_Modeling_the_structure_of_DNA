@@ -1,45 +1,54 @@
+print("starting main.py")
+
+import torch
+import matplotlib.pyplot as plt
+import os
+
+print("imported all libraries")
+
 from data import Data
 from model import LDM
 from train import TrainModel
-import torch
-import matplotlib.pyplot as plt
+from evaluate import make_test_set, evaluate
+
+print("imported all files")
+
+ls_dim = int(os.getenv("LS_DIM", 2))
 
 print("everything is imported!")
+
 device = "cuda" if torch.cuda.is_available() else "cpu"
+
 print(device)
+
 # Load AnnData
 data_loader = Data()
 adata = data_loader.load_data(backed=True)
 
 print("data added")
+
 # Convert AnnData.X to tensor
 Aij = data_loader.anndata_to_tensor(adata, device=device, make_binary=True)
+
+Aij, targets = make_test_set(Aij, percentage=0.1)
 
 # Initialize model
 model = LDM(
     data=Aij,
-    ls_dim=2,
+    ls_dim=ls_dim,
     device=device,
-    epochs=1,
+    epochs=6_001,
     lr=1e-3,
     seed=42
 )
 
 print("beginning training")
+
 # Train
-losses = TrainModel(model, device=device, threads=6)
+losses = TrainModel(model, device=device, plots=False)
 
-print("plotting")
-cell_embeddings = model.embed_cells.detach().cpu().numpy()
+print("training complete")
 
-auc, auroc_data, f1_score = evaluate.validate(model, Aij, targets, target_zeros, increment=0.001)
-print(f"AUC: {auc:.4f} | F1 Score: {f1_score:.4f}")
+auc, auc_data = evaluate(model, Aij, targets)
 
-plt.figure(figsize=(7, 6))
-plt.scatter(cell_embeddings[:, 0], cell_embeddings[:, 1], s=5, alpha=0.7)
-plt.xlabel("Latent dim 1")
-plt.ylabel("Latent dim 2")
-plt.title("Cell latent space")
-plt.savefig("latent_space_10000.png", dpi=300)
-
-model.save_model(f"ldm_model_{ls_dim}.pth")
+print(f"AUROC: {auc:.4f}")
