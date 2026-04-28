@@ -5,9 +5,9 @@ from pathlib import Path
 from visualize import plot_latent_embeddings
 from visualize import plot_loss_curve
 from visualize import plot_embeddings
-from evaluate import validate
+from evaluate import *
 
-def TrainModel(model, device="cpu", plots=False):
+def TrainModel(model, device="cpu", plots=False, targets=None, target_zeros=None):
     """
     Train the DNA sequence embedding model.
 
@@ -55,7 +55,8 @@ def TrainModel(model, device="cpu", plots=False):
         losses.append(loss.item())
 
         if epoch % 50 == 0:
-            print(f"Epoch {epoch}/{model.epochs} | Loss: {loss.item():.4f} | AUC (100%): {validate(model, model.Aij, model.targets)[0]:.4f}")
+            auc, _, f1_score = validate(model, model.Aij, targets, target_zeros)
+            print(f"Epoch {epoch}/{model.epochs} | Loss: {loss.item():.4f} | AUC (100%): {auc:.4f} | F1 Score: {f1_score:.4f}")
             losses_per_interval.append(loss.item())
             interval_steps.append(epoch)
 

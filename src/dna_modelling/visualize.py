@@ -179,19 +179,21 @@ def plot_latent_embeddings(model, ls_dim, epoch):
     plt.savefig(f"plots/latent_space_peaks_ls{ls_dim}_{epoch}.png", dpi=300)
     plt.close()
 
-def plot_embeddings(model, ls_dim, epoch):
+def plot_embeddings(model, ls_dim, epoch, interval_steps, losses_per_interval):
+    cell_embeddings = model.embed_cells.detach().cpu().numpy()
+    peak_embeddings = model.embed_features.detach().cpu().numpy()
     plt.figure(figsize=(7, 6))
     plt.scatter(
-        cell_embeddings_2d[:, 0],
-        cell_embeddings_2d[:, 1],
+        cell_embeddings[:, 0],
+        cell_embeddings[:, 1],
         s=5,
         alpha=0.7,
         color="blue",
         label="Cells",
     )
     plt.scatter(
-        peak_embeddings_2d[:, 0],
-        peak_embeddings_2d[:, 1],
+        peak_embeddings[:, 0],
+        peak_embeddings[:, 1],
         s=5,
         alpha=0.7,
         color="red",
@@ -206,8 +208,8 @@ def plot_embeddings(model, ls_dim, epoch):
 
     plt.figure(figsize=(7, 6))
     plt.scatter(
-        cell_embeddings_2d[:, 0],
-        cell_embeddings_2d[:, 1],
+        cell_embeddings[:, 0],
+        cell_embeddings[:, 1],
         s=5,
         alpha=0.7,
         color="blue",
@@ -222,8 +224,8 @@ def plot_embeddings(model, ls_dim, epoch):
 
     plt.figure(figsize=(7, 6))
     plt.scatter(
-        peak_embeddings_2d[:, 0],
-        peak_embeddings_2d[:, 1],
+        peak_embeddings[:, 0],
+        peak_embeddings[:, 1],
         s=5,
         alpha=0.7,
         color="red",

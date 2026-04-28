@@ -1,5 +1,4 @@
 import torch
-import numpy as np
 
 def make_test_set(Aij, percentage=0.1):
     """
@@ -23,15 +22,19 @@ def make_test_set(Aij, percentage=0.1):
     removed_indices = remove_mask.nonzero(as_tuple=False)
     targets = [tuple(index) for index in removed_indices.cpu().tolist()]
 
-    target_zeros = []
+    n_targets = removed_indices.shape[0]
+    if n_targets == 0:
+        return Aij, targets, []
 
-    for _ in range(len(targets)):
-        while True:
-            cell_idx = np.random.randint(0, Aij.shape[0])
-            peak_idx = np.random.randint(0, Aij.shape[1])
-            if Aij[cell_idx, peak_idx] == 0 and (cell_idx, peak_idx) not in targets and (cell_idx, peak_idx) not in target_zeros:
-                target_zeros.append((cell_idx, peak_idx))
-                break
+    # Sample negatives from original zero entries without replacement.
+    zero_candidates = (~connected_mask).flatten().nonzero(as_tuple=False).squeeze(1)
+    if zero_candidates.numel() < n_targets:
+        raise ValueError("Not enough zero entries to sample target_zeros without replacement")
+
+    sampled_ids = zero_candidates[torch.randperm(zero_candidates.numel(), device=Aij.device)[:n_targets]]
+    row_idx = sampled_ids // Aij.shape[1]
+    col_idx = sampled_ids % Aij.shape[1]
+    target_zeros = [tuple(index) for index in torch.stack((row_idx, col_idx), dim=1).cpu().tolist()]
 
     return Aij, targets, target_zeros
 
