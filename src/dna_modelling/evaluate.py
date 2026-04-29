@@ -103,6 +103,6 @@ def validate(model, Aij, targets, target_zeros, increment=0.001):
     fpr_sorted = curve_tensor[sorted_indices, 0]
     tpr_sorted = curve_tensor[sorted_indices, 1]
     auc = torch.trapz(tpr_sorted, fpr_sorted).item()
-    pr_auc = torch.trapz(torch.tensor(pr_curve_data, dtype=torch.float32), dim=0).item()
+    pr_auc = torch.trapz(torch.tensor([p for p, r in pr_curve_data], device=curve_tensor.device), torch.tensor([r for p, r in pr_curve_data], device=curve_tensor.device)).item()
 
     return auc, auroc_data, f1_score, pr_auc, pr_curve_data
