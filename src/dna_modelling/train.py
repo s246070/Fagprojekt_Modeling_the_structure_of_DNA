@@ -43,7 +43,7 @@ def TrainModel(model, device="cpu", plots=False, targets=None, target_zeros=None
     losses_per_interval = []
     interval_steps = []
     ls_dim = model.ls_dim
-
+    print(f"Starting training for {model.epochs} epochs with learning rate {model.lr} and latent space dimension {ls_dim}...", flush=True)
     for epoch in range(model.epochs):
         optimizer.zero_grad()
 
@@ -54,9 +54,9 @@ def TrainModel(model, device="cpu", plots=False, targets=None, target_zeros=None
 
         losses.append(loss.item())
 
-        if epoch % 50 == 0:
+        if epoch % 50 == 0 and epoch > 0:
             auc, _, f1_score = validate(model, model.Aij, targets, target_zeros)
-            print(f"Epoch {epoch}/{model.epochs} | Loss: {loss.item():.4f} | AUC (100%): {auc:.4f} | F1 Score: {f1_score:.4f}")
+            print(f"Epoch {epoch}/{model.epochs} | Loss: {loss.item():.4f} | AUC (100%): {auc:.4f} | F1 Score: {f1_score:.4f}", flush=True)
             losses_per_interval.append(loss.item())
             interval_steps.append(epoch)
 

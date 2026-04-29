@@ -58,29 +58,40 @@ def validate(model, Aij, targets, target_zeros, increment=0.001):
 
     probabilities = model.probabilities()
 
-    # Make AUROC curve data
-    auroc_data = []
-    f1_score = 0
+    # Extract probabilities for targets and target_zeros in batch
+    targets_array = torch.tensor(targets, dtype=torch.long, device=probabilities.device)
+    target_zeros_array = torch.tensor(target_zeros, dtype=torch.long, device=probabilities.device)
+
+    target_probs = probabilities[targets_array[:, 0], targets_array[:, 1]]
+    target_zero_probs = probabilities[target_zeros_array[:, 0], target_zeros_array[:, 1]]
+
+    # Create thresholds and filter out anything > 1.0
     thresholds = torch.arange(0.0, 1.0 + increment, increment, device=probabilities.device)
-    
-    for threshold in thresholds.tolist():
-        if threshold > 1.0:
-            continue
+    thresholds = thresholds[thresholds <= 1.0]
 
-        tp = sum(probabilities[cell_idx, peak_idx] >= threshold for cell_idx, peak_idx in targets)
-        fp = sum(probabilities[cell_idx, peak_idx] >= threshold for cell_idx, peak_idx in target_zeros)
-        fn = sum(probabilities[cell_idx, peak_idx] < threshold for cell_idx, peak_idx in targets)
-        tn = sum(probabilities[cell_idx, peak_idx] < threshold for cell_idx, peak_idx in target_zeros)
+    # Vectorized threshold comparison using broadcasting
+    target_probs_expanded = target_probs.unsqueeze(1)
+    target_zero_probs_expanded = target_zero_probs.unsqueeze(1)
+    thresholds_expanded = thresholds.unsqueeze(0)
 
-        tpr = tp / (tp + fn) if (tp + fn) > 0 else 0.0
-        fpr = fp / (fp + tn) if (fp + tn) > 0 else 0.0
-        precision = tp / (tp + fp) if (tp + fp) > 0 else 0.0
-        recall = tpr
-        auroc_data.append((fpr, tpr))
-        
-        if precision + recall > 0 and 2 * (precision * recall) / (precision + recall) > f1_score:
-            f1_score = 2 * (precision * recall) / (precision + recall)
+    # Calculate TP, FP, FN, TN for all thresholds at once
+    tp = (target_probs_expanded >= thresholds_expanded).sum(dim=0)
+    fp = (target_zero_probs_expanded >= thresholds_expanded).sum(dim=0)
+    fn = (target_probs_expanded < thresholds_expanded).sum(dim=0)
+    tn = (target_zero_probs_expanded < thresholds_expanded).sum(dim=0)
 
+    # Calculate TPR, FPR, Precision, Recall with numerical stability
+    tpr = tp / (tp + fn).clamp(min=1)
+    fpr = fp / (fp + tn).clamp(min=1)
+    precision = tp / (tp + fp).clamp(min=1)
+    recall = tpr
+
+    # Calculate max F1 score across all thresholds
+    f1_scores = 2 * (precision * recall) / (precision + recall).clamp(min=1e-8)
+    f1_score = f1_scores.max().item()
+
+    # Create AUROC data
+    auroc_data = [(fpr[i].item(), tpr[i].item()) for i in range(len(thresholds))]
 
     # Calculate the area under the curve (AUC) using the trapezoidal rule
     if not auroc_data:
