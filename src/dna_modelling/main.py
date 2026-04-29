@@ -50,13 +50,14 @@ losses = TrainModel(model, device=device, plots=False, targets=targets, target_z
 
 print("training complete", flush=True)
 
-auc, auc_data, f1_score = validate(model, Aij, targets, target_zeros)
+auc, auc_data, f1_score, pr_auc, pr_curve_data = validate(model, Aij, targets, target_zeros)
 
 #save model in models folder
 LDM.save_model(model, f"models/ldm_ls{ls_dim}.pth")
 
 print(f"AUROC: {auc:.4f}", flush=True)
 print(f"F1 Score: {f1_score:.4f}", flush=True)
+print(f"PR AUC: {pr_auc:.4f}", flush=True)
 
 #stop job when done
 sys.exit(0)

@@ -92,6 +92,7 @@ def validate(model, Aij, targets, target_zeros, increment=0.001):
 
     # Create AUROC data
     auroc_data = [(fpr[i].item(), tpr[i].item()) for i in range(len(thresholds))]
+    pr_curve_data = [(precision[i].item(), recall[i].item()) for i in range(len(thresholds))]
 
     # Calculate the area under the curve (AUC) using the trapezoidal rule
     if not auroc_data:
@@ -102,5 +103,6 @@ def validate(model, Aij, targets, target_zeros, increment=0.001):
     fpr_sorted = curve_tensor[sorted_indices, 0]
     tpr_sorted = curve_tensor[sorted_indices, 1]
     auc = torch.trapz(tpr_sorted, fpr_sorted).item()
+    pr_auc = torch.trapz(torch.tensor(pr_curve_data, dtype=torch.float32), dim=0).item()
 
-    return auc, auroc_data, f1_score
+    return auc, auroc_data, f1_score, pr_auc, pr_curve_data

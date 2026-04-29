@@ -55,8 +55,8 @@ def TrainModel(model, device="cpu", plots=False, targets=None, target_zeros=None
         losses.append(loss.item())
 
         if epoch % 50 == 0 and epoch > 0:
-            auc, _, f1_score = validate(model, model.Aij, targets, target_zeros)
-            print(f"Epoch {epoch}/{model.epochs} | Loss: {loss.item():.4f} | AUC (100%): {auc:.4f} | F1 Score: {f1_score:.4f}", flush=True)
+            auc, _, f1_score, pr_auc, _ = validate(model, model.Aij, targets, target_zeros)
+            print(f"Epoch {epoch}/{model.epochs} | Loss: {loss.item():.4f} | AUC (100%): {auc:.4f} | F1 Score: {f1_score:.4f} | PR AUC: {pr_auc:.4f}", flush=True)
             losses_per_interval.append(loss.item())
             interval_steps.append(epoch)
 
