@@ -60,13 +60,13 @@ def TrainModel(model, device="cpu", plots=False, targets=None, target_zeros=None
             losses_per_interval.append(loss.item())
             interval_steps.append(epoch)
 
-            if plots:
+            if epoch % 200 == 0 and plots:
                 plot_loss_curve(
                     ls_dim=ls_dim,
                     interval_steps=interval_steps,
                     losses_per_interval=losses_per_interval,
                 )
-                if model.ls_dim > 3:
+                if model.ls_dim > 2:
                     plot_latent_embeddings(
                         model=model,
                         ls_dim=ls_dim,

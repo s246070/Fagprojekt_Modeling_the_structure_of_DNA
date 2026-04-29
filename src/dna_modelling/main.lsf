@@ -1,7 +1,7 @@
 #!/bin/bash
-#BSUB -J Main_Script_2_dim
-#BSUB -o outfiles/Main_Script_2_dim%J.out
-#BSUB -e outfiles/Main_Script_2_dim%J.err
+#BSUB -J Main_Script_32_dim
+#BSUB -o outfiles/Main_Script_32_dim%J.out
+#BSUB -e outfiles/Main_Script_32_dim%J.err
 #BSUB -q hpc
 #BSUB -n 12
 #BSUB -R "rusage[mem=3000]"
@@ -23,5 +23,5 @@ export NUMEXPR_NUM_THREADS=$LSB_DJOB_NUMPROC
 export MKL_DYNAMIC=false
 export OMP_DYNAMIC=false
 
-export LS_DIM=2
+export LS_DIM=32
 python src/dna_modelling/main.py
