@@ -33,11 +33,15 @@ def TrainModel(model, device="cpu", plots=False, targets=None, target_zeros=None
 
     optimizer = torch.optim.Adam(model.parameters(), lr=model.lr)
 
-    n_pos = model.Aij.sum()
-    n_neg = model.Aij.numel() - n_pos
-    pos_weight = (n_neg / (n_pos + 1e-8)).to(device)
+    # Calculate pos_weight for BCEWithLogitsLoss to handle class imbalance
+    # n_pos = model.Aij.sum()
+    # n_neg = model.Aij.numel() - n_pos
+    # pos_weight = (n_neg / (n_pos + 1e-8)).to(device)
 
-    criterion = nn.BCEWithLogitsLoss(pos_weight=pos_weight)
+    # criterion = nn.BCEWithLogitsLoss(pos_weight=pos_weight)
+
+    # Calculate BCELoss with logits without pos_weight
+    criterion = nn.BCEWithLogitsLoss()
 
     losses = []
     losses_per_interval = []
