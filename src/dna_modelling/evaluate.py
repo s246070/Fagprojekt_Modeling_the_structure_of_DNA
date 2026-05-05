@@ -87,8 +87,10 @@ def validate(model, Aij, targets, target_zeros, increment=0.001):
     recall = tpr
 
     # Calculate max F1 score across all thresholds
-    f1_scores = 2 * (precision * recall) / (precision + recall).clamp(min=1e-8)
-    f1_score = f1_scores.max().item()
+    recall_micro = ((tp + fn) / (tp + tn + fn + fp)).clamp(min=1)
+    precision_micro = ((tp + fn) / (tp + tn + fn + fp)).clamp(min=1)
+    f1_micro_score = 2 * (precision_micro * recall_micro) / (precision_micro + recall_micro).clamp(min=1e-8)
+    f1_micro_score = f1_micro_score.max().item()
 
     # Create AUROC data
     auroc_data = [(fpr[i].item(), tpr[i].item()) for i in range(len(thresholds))]
@@ -96,13 +98,21 @@ def validate(model, Aij, targets, target_zeros, increment=0.001):
 
     # Calculate the area under the curve (AUC) using the trapezoidal rule
     if not auroc_data:
-        return 0.0, auroc_data, f1_score
+        return 0.0, [], f1_micro_score, 0.0, pr_curve_data
 
     curve_tensor = torch.tensor(auroc_data, dtype=torch.float32)
     sorted_indices = torch.argsort(curve_tensor[:, 0])
     fpr_sorted = curve_tensor[sorted_indices, 0]
     tpr_sorted = curve_tensor[sorted_indices, 1]
     auc = torch.trapz(tpr_sorted, fpr_sorted).item()
-    pr_auc = torch.trapz(torch.tensor([p for p, r in pr_curve_data], device=curve_tensor.device), torch.tensor([r for p, r in pr_curve_data], device=curve_tensor.device)).item()
+    
+    # Sort PR curve by recall for proper AUC calculation
+    pr_curve_tensor = torch.tensor(pr_curve_data, dtype=torch.float32)
+    recall_vals = pr_curve_tensor[:, 1]
+    precision_vals = pr_curve_tensor[:, 0]
+    sorted_pr_indices = torch.argsort(recall_vals)
+    recall_sorted = recall_vals[sorted_pr_indices]
+    precision_sorted = precision_vals[sorted_pr_indices]
+    pr_auc = torch.trapz(precision_sorted, recall_sorted).item()
 
-    return auc, auroc_data, f1_score, pr_auc, pr_curve_data
+    return auc, auroc_data, f1_micro_score, pr_auc, pr_curve_data
