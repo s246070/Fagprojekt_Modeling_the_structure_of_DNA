@@ -19,10 +19,10 @@ def make_test_set(Aij, percentage=0.1):
     remove_mask = connected_mask & sampled_mask
 
     Aij[remove_mask] = 0
-    removed_indices = remove_mask.nonzero(as_tuple=False)
-    targets = [tuple(index) for index in removed_indices.cpu().tolist()]
+    removed_indices = remove_mask.nonzero(as_tuple=True)
+    targets = list(zip(removed_indices[0].cpu().tolist(), removed_indices[1].cpu().tolist()))
 
-    n_targets = removed_indices.shape[0]
+    n_targets = removed_indices[0].shape[0]
     if n_targets == 0:
         return Aij, targets, []
 
@@ -34,7 +34,7 @@ def make_test_set(Aij, percentage=0.1):
     sampled_ids = zero_candidates[torch.randperm(zero_candidates.numel(), device=Aij.device)[:n_targets]]
     row_idx = sampled_ids // Aij.shape[1]
     col_idx = sampled_ids % Aij.shape[1]
-    target_zeros = [tuple(index) for index in torch.stack((row_idx, col_idx), dim=1).cpu().tolist()]
+    target_zeros = list(zip(row_idx.cpu().tolist(), col_idx.cpu().tolist()))
 
     return Aij, targets, target_zeros
 
