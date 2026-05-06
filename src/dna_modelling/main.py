@@ -28,7 +28,7 @@ print(device, flush=True)
 
 # Load AnnData
 data_loader = Data()
-adata = data_loader.load_data(backed=True)
+adata = data_loader.load_data(backed=True, full=True)
 
 print("data added", flush=True)
 
@@ -42,7 +42,7 @@ model = LDM(
     data=Aij,
     ls_dim=ls_dim,
     device=device,
-    epochs=8_001,
+    epochs=51,
     lr=1e-3,
     weighting=weighting,
     index=index,
