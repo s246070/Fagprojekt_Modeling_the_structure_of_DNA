@@ -43,7 +43,7 @@ class LDM(nn.Module):
         Computes the predicted accessibility probabilities by applying the sigmoid function to the logits.
     
     """
-    def __init__(self, data, ls_dim, device, epochs, lr, seed=None):
+    def __init__(self, data, ls_dim, device, epochs, lr, index, weighting, seed=None):
         super().__init__()
         self.Aij = data.float().to(device)
         self.ls_dim = ls_dim
@@ -51,6 +51,8 @@ class LDM(nn.Module):
         self.cells, self.features = self.Aij.shape
         self.epochs = epochs
         self.lr = lr
+        self.index = index
+        self.weighting = weighting
         self.seed = seed
 
         self.__set_seed(seed)

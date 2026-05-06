@@ -178,6 +178,8 @@ cython_debug/
 
 data/
 
+results
+
 uv.lock
 uv
 

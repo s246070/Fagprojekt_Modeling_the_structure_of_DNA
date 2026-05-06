@@ -1,5 +1,4 @@
 import torch
-import numpy as np
 
 def make_test_set(Aij, percentage=0.1):
     """
@@ -23,15 +22,19 @@ def make_test_set(Aij, percentage=0.1):
     removed_indices = remove_mask.nonzero(as_tuple=False)
     targets = [tuple(index) for index in removed_indices.cpu().tolist()]
 
-    target_zeros = []
+    n_targets = removed_indices.shape[0]
+    if n_targets == 0:
+        return Aij, targets, []
 
-    for _ in range(len(targets)):
-        while True:
-            cell_idx = np.random.randint(0, Aij.shape[0])
-            peak_idx = np.random.randint(0, Aij.shape[1])
-            if Aij[cell_idx, peak_idx] == 0 and (cell_idx, peak_idx) not in targets and (cell_idx, peak_idx) not in target_zeros:
-                target_zeros.append((cell_idx, peak_idx))
-                break
+    # Sample negatives from original zero entries without replacement.
+    zero_candidates = (~connected_mask).flatten().nonzero(as_tuple=False).squeeze(1)
+    if zero_candidates.numel() < n_targets:
+        raise ValueError("Not enough zero entries to sample target_zeros without replacement")
+
+    sampled_ids = zero_candidates[torch.randperm(zero_candidates.numel(), device=Aij.device)[:n_targets]]
+    row_idx = sampled_ids // Aij.shape[1]
+    col_idx = sampled_ids % Aij.shape[1]
+    target_zeros = [tuple(index) for index in torch.stack((row_idx, col_idx), dim=1).cpu().tolist()]
 
     return Aij, targets, target_zeros
 
@@ -55,38 +58,61 @@ def validate(model, Aij, targets, target_zeros, increment=0.001):
 
     probabilities = model.probabilities()
 
-    # Make AUROC curve data
-    auroc_data = []
-    f1_score = 0
+    # Extract probabilities for targets and target_zeros in batch
+    targets_array = torch.tensor(targets, dtype=torch.long, device=probabilities.device)
+    target_zeros_array = torch.tensor(target_zeros, dtype=torch.long, device=probabilities.device)
+
+    target_probs = probabilities[targets_array[:, 0], targets_array[:, 1]]
+    target_zero_probs = probabilities[target_zeros_array[:, 0], target_zeros_array[:, 1]]
+
+    # Create thresholds and filter out anything > 1.0
     thresholds = torch.arange(0.0, 1.0 + increment, increment, device=probabilities.device)
-    
-    for threshold in thresholds.tolist():
-        if threshold > 1.0:
-            continue
+    thresholds = thresholds[thresholds <= 1.0]
 
-        tp = sum(probabilities[cell_idx, peak_idx] >= threshold for cell_idx, peak_idx in targets)
-        fp = sum(probabilities[cell_idx, peak_idx] >= threshold for cell_idx, peak_idx in target_zeros)
-        fn = sum(probabilities[cell_idx, peak_idx] < threshold for cell_idx, peak_idx in targets)
-        tn = sum(probabilities[cell_idx, peak_idx] < threshold for cell_idx, peak_idx in target_zeros)
+    # Vectorized threshold comparison using broadcasting
+    target_probs_expanded = target_probs.unsqueeze(1)
+    target_zero_probs_expanded = target_zero_probs.unsqueeze(1)
+    thresholds_expanded = thresholds.unsqueeze(0)
 
-        tpr = tp / (tp + fn) if (tp + fn) > 0 else 0.0
-        fpr = fp / (fp + tn) if (fp + tn) > 0 else 0.0
-        precision = tp / (tp + fp) if (tp + fp) > 0 else 0.0
-        recall = tpr
-        auroc_data.append((fpr, tpr))
-        
-        if precision + recall > 0 and 2 * (precision * recall) / (precision + recall) > f1_score:
-            f1_score = 2 * (precision * recall) / (precision + recall)
+    # Calculate TP, FP, FN, TN for all thresholds at once
+    tp = (target_probs_expanded >= thresholds_expanded).sum(dim=0)
+    fp = (target_zero_probs_expanded >= thresholds_expanded).sum(dim=0)
+    fn = (target_probs_expanded < thresholds_expanded).sum(dim=0)
+    tn = (target_zero_probs_expanded < thresholds_expanded).sum(dim=0)
 
+    # Calculate TPR, FPR, Precision, Recall with numerical stability
+    tpr = tp / (tp + fn).clamp(min=1)
+    fpr = fp / (fp + tn).clamp(min=1)
+    precision = tp / (tp + fp).clamp(min=1)
+    recall = tpr
+
+    # Calculate max F1 score across all thresholds
+    recall_micro = (tp + tn) / (tp + tn + fn + fp).clamp(min=1e-8)
+    precision_micro = (tp + tn) / (tp + tn + fn + fp).clamp(min=1e-8)
+    f1_micro_score = 2 * (precision_micro * recall_micro) / (precision_micro + recall_micro).clamp(min=1e-8)
+    f1_micro_score = f1_micro_score.max().item()
+
+    # Create AUROC data
+    auroc_data = [(fpr[i].item(), tpr[i].item()) for i in range(len(thresholds))]
+    pr_curve_data = [(precision[i].item(), recall[i].item()) for i in range(len(thresholds))]
 
     # Calculate the area under the curve (AUC) using the trapezoidal rule
     if not auroc_data:
-        return 0.0, auroc_data, f1_score
+        return 0.0, [], f1_micro_score, 0.0, pr_curve_data
 
     curve_tensor = torch.tensor(auroc_data, dtype=torch.float32)
     sorted_indices = torch.argsort(curve_tensor[:, 0])
     fpr_sorted = curve_tensor[sorted_indices, 0]
     tpr_sorted = curve_tensor[sorted_indices, 1]
     auc = torch.trapz(tpr_sorted, fpr_sorted).item()
+    
+    # Sort PR curve by recall for proper AUC calculation
+    pr_curve_tensor = torch.tensor(pr_curve_data, dtype=torch.float32)
+    recall_vals = pr_curve_tensor[:, 1]
+    precision_vals = pr_curve_tensor[:, 0]
+    sorted_pr_indices = torch.argsort(recall_vals)
+    recall_sorted = recall_vals[sorted_pr_indices]
+    precision_sorted = precision_vals[sorted_pr_indices]
+    pr_auc = torch.trapz(precision_sorted, recall_sorted).item()
 
-    return auc, auroc_data, f1_score
+    return auc, auroc_data, f1_micro_score, pr_auc, pr_curve_data

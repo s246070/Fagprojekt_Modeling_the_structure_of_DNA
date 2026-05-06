@@ -5,9 +5,9 @@ from pathlib import Path
 from visualize import plot_latent_embeddings
 from visualize import plot_loss_curve
 from visualize import plot_embeddings
-from evaluate import validate
+from evaluate import *
 
-def TrainModel(model, device="cpu", plots=False):
+def TrainModel(model, device="cpu", plots=False, targets=None, target_zeros=None):
     """
     Train the DNA sequence embedding model.
 
@@ -33,17 +33,24 @@ def TrainModel(model, device="cpu", plots=False):
 
     optimizer = torch.optim.Adam(model.parameters(), lr=model.lr)
 
-    n_pos = model.Aij.sum()
-    n_neg = model.Aij.numel() - n_pos
-    pos_weight = (n_neg / (n_pos + 1e-8)).to(device)
+    # Calculate pos_weight for BCEWithLogitsLoss to handle class imbalance or use standard BCE loss if weighting is not enabled
+    if model.weighting:
+        n_pos = model.Aij.sum()
+        n_neg = model.Aij.numel() - n_pos
+        pos_weight = (n_neg / (n_pos + 1e-8)).to(device)
+        criterion = nn.BCEWithLogitsLoss(pos_weight=pos_weight)
+    else:
+        criterion = nn.BCEWithLogitsLoss()
 
-    criterion = nn.BCEWithLogitsLoss(pos_weight=pos_weight)
 
     losses = []
+    aucs = []
+    pr_aucs = []
+    f1_scores = []
     losses_per_interval = []
     interval_steps = []
     ls_dim = model.ls_dim
-
+    print(f"Starting training for {model.epochs} epochs with learning rate {model.lr} and latent space dimension {ls_dim}...", flush=True)
     for epoch in range(model.epochs):
         optimizer.zero_grad()
 
@@ -54,18 +61,22 @@ def TrainModel(model, device="cpu", plots=False):
 
         losses.append(loss.item())
 
-        if epoch % 50 == 0:
-            print(f"Epoch {epoch}/{model.epochs} | Loss: {loss.item():.4f} | AUC (100%): {validate(model, model.Aij, model.targets)[0]:.4f}")
+        if epoch % 50 == 0 and epoch > 0:
+            auc, _, f1_score, pr_auc, _ = validate(model, model.Aij, targets, target_zeros)
+            aucs.append(auc)
+            f1_scores.append(f1_score)
+            pr_aucs.append(pr_auc)
+            print(f"Epoch {epoch}/{model.epochs} | Loss: {loss.item():.4f} | AUC (100%): {auc:.4f} | F1 Score: {f1_score:.4f} | PR AUC: {pr_auc:.4f}", flush=True)
             losses_per_interval.append(loss.item())
             interval_steps.append(epoch)
 
-            if plots:
+            if epoch % 200 == 0 and plots:
                 plot_loss_curve(
                     ls_dim=ls_dim,
                     interval_steps=interval_steps,
                     losses_per_interval=losses_per_interval,
                 )
-                if model.ls_dim > 3:
+                if model.ls_dim > 2:
                     plot_latent_embeddings(
                         model=model,
                         ls_dim=ls_dim,
@@ -81,5 +92,10 @@ def TrainModel(model, device="cpu", plots=False):
                         interval_steps=interval_steps,
                         losses_per_interval=losses_per_interval,
                     )
+
+    with open(f"results/{ls_dim}_weighting_{model.weighting}_run{model.index}.csv", "w") as f:
+        f.write("Loss,AUC,F1-Score,PR-AUC\n")
+        for i in range(len(aucs)):
+            f.write(f"{losses[i*50]},{aucs[i]},{f1_scores[i]},{pr_aucs[i]}\n")
 
     return losses
