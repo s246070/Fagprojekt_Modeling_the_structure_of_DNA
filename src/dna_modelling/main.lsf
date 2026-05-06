@@ -1,10 +1,10 @@
 #!/bin/bash
-#BSUB -J Main_Script_32_dim_no_weighting
-#BSUB -o outfiles/Main_Script_32_dim_no_weighting%J.out
-#BSUB -e outfiles/Main_Script_32_dim_no_weighting%J.err
+#BSUB -J Main_Script_2
+#BSUB -o outfiles/Main_Script_2%J.out
+#BSUB -e outfiles/Main_Script_2%J.err
 #BSUB -q hpc
-#BSUB -n 12
-#BSUB -R "rusage[mem=3300]"
+#BSUB -n 4
+#BSUB -R "rusage[mem=9900]"
 #BSUB -R "span[hosts=1]"
 #BSUB -W 08:00
 # end of BSUB options
@@ -23,5 +23,7 @@ export NUMEXPR_NUM_THREADS=$LSB_DJOB_NUMPROC
 export MKL_DYNAMIC=false
 export OMP_DYNAMIC=false
 
-export LS_DIM=32
+export LS_DIM=2
+export INDEX=1
+export WEIGHTING=false
 python src/dna_modelling/main.py

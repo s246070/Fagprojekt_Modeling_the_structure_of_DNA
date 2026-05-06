@@ -16,6 +16,10 @@ print("imported all files", flush=True)
 
 ls_dim = int(os.getenv("LS_DIM", 2))
 
+index = int(os.getenv("INDEX", 1))
+
+weighting = os.getenv("WEIGHTING", "false").lower() == "true"
+
 print("everything is imported!", flush=True)
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -38,8 +42,10 @@ model = LDM(
     data=Aij,
     ls_dim=ls_dim,
     device=device,
-    epochs=6_001,
+    epochs=8_001,
     lr=1e-3,
+    weighting=weighting,
+    index=index,
     seed=42
 )
 
@@ -53,11 +59,11 @@ print("training complete", flush=True)
 auc, auc_data, f1_score, pr_auc, pr_curve_data = validate(model, Aij, targets, target_zeros)
 
 #save model in models folder
-LDM.save_model(model, f"models/ldm_ls{ls_dim}.pth")
+LDM.save_model(model, f"models/ldm_ls{ls_dim}_weighting_{weighting}_run{index}.pth")
 
 print(f"AUROC: {auc:.4f}", flush=True)
 print(f"F1 Score: {f1_score:.4f}", flush=True)
 print(f"PR AUC: {pr_auc:.4f}", flush=True)
 
 #stop job when done
-sys.exit(0)
+sys.exit()

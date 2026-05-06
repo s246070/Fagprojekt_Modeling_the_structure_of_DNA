@@ -87,8 +87,8 @@ def validate(model, Aij, targets, target_zeros, increment=0.001):
     recall = tpr
 
     # Calculate max F1 score across all thresholds
-    recall_micro = ((tp + fn) / (tp + tn + fn + fp)).clamp(min=1)
-    precision_micro = ((tp + fn) / (tp + tn + fn + fp)).clamp(min=1)
+    recall_micro = (tp + tn) / (tp + tn + fn + fp).clamp(min=1e-8)
+    precision_micro = (tp + tn) / (tp + tn + fn + fp).clamp(min=1e-8)
     f1_micro_score = 2 * (precision_micro * recall_micro) / (precision_micro + recall_micro).clamp(min=1e-8)
     f1_micro_score = f1_micro_score.max().item()
 

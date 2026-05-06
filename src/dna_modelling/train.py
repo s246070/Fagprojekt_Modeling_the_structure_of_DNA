@@ -33,17 +33,20 @@ def TrainModel(model, device="cpu", plots=False, targets=None, target_zeros=None
 
     optimizer = torch.optim.Adam(model.parameters(), lr=model.lr)
 
-    # Calculate pos_weight for BCEWithLogitsLoss to handle class imbalance
-    # n_pos = model.Aij.sum()
-    # n_neg = model.Aij.numel() - n_pos
-    # pos_weight = (n_neg / (n_pos + 1e-8)).to(device)
+    # Calculate pos_weight for BCEWithLogitsLoss to handle class imbalance or use standard BCE loss if weighting is not enabled
+    if model.weighting:
+        n_pos = model.Aij.sum()
+        n_neg = model.Aij.numel() - n_pos
+        pos_weight = (n_neg / (n_pos + 1e-8)).to(device)
+        criterion = nn.BCEWithLogitsLoss(pos_weight=pos_weight)
+    else:
+        criterion = nn.BCEWithLogitsLoss()
 
-    # criterion = nn.BCEWithLogitsLoss(pos_weight=pos_weight)
-
-    # Calculate BCELoss with logits without pos_weight
-    criterion = nn.BCEWithLogitsLoss()
 
     losses = []
+    aucs = []
+    pr_aucs = []
+    f1_scores = []
     losses_per_interval = []
     interval_steps = []
     ls_dim = model.ls_dim
@@ -60,6 +63,9 @@ def TrainModel(model, device="cpu", plots=False, targets=None, target_zeros=None
 
         if epoch % 50 == 0 and epoch > 0:
             auc, _, f1_score, pr_auc, _ = validate(model, model.Aij, targets, target_zeros)
+            aucs.append(auc)
+            f1_scores.append(f1_score)
+            pr_aucs.append(pr_auc)
             print(f"Epoch {epoch}/{model.epochs} | Loss: {loss.item():.4f} | AUC (100%): {auc:.4f} | F1 Score: {f1_score:.4f} | PR AUC: {pr_auc:.4f}", flush=True)
             losses_per_interval.append(loss.item())
             interval_steps.append(epoch)
@@ -86,5 +92,10 @@ def TrainModel(model, device="cpu", plots=False, targets=None, target_zeros=None
                         interval_steps=interval_steps,
                         losses_per_interval=losses_per_interval,
                     )
+
+    with open(f"results/{ls_dim}_weighting_{model.weighting}_run{model.index}.csv", "w") as f:
+        f.write("Loss,AUC,F1-Score,PR-AUC\n")
+        for i in range(len(aucs)):
+            f.write(f"{losses[i*50]},{aucs[i]},{f1_scores[i]},{pr_aucs[i]}\n")
 
     return losses
