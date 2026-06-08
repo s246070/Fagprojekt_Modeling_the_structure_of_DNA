@@ -1,4 +1,5 @@
 import torch
+from datetime import datetime
 
 def make_test_set(Aij, percentage=0.1):
     """
@@ -17,24 +18,30 @@ def make_test_set(Aij, percentage=0.1):
     connected_mask = Aij == 1
     sampled_mask = torch.rand(Aij.shape, device=Aij.device) < percentage
     remove_mask = connected_mask & sampled_mask
-
+    print(f"begin removing connections{datetime.now()}", flush=True)
     Aij[remove_mask] = 0
-    removed_indices = remove_mask.nonzero(as_tuple=False)
-    targets = [tuple(index) for index in removed_indices.cpu().tolist()]
+    removed_indices = remove_mask.nonzero(as_tuple=True)
+    print(f"begin target thing{datetime.now()}", flush=True)
+    targets = list(zip(removed_indices[0].cpu().tolist(), removed_indices[1].cpu().tolist()))
 
-    n_targets = removed_indices.shape[0]
+    print(f"Doing n targets{datetime.now()}", flush=True)
+    n_targets = removed_indices[0].shape[0]
     if n_targets == 0:
         return Aij, targets, []
 
+    print(f"Removed some connections, now sampling negatives{datetime.now()}", flush=True)
     # Sample negatives from original zero entries without replacement.
     zero_candidates = (~connected_mask).flatten().nonzero(as_tuple=False).squeeze(1)
     if zero_candidates.numel() < n_targets:
         raise ValueError("Not enough zero entries to sample target_zeros without replacement")
 
+    print(f"begin sampling target_zeros{datetime.now()}", flush=True)
     sampled_ids = zero_candidates[torch.randperm(zero_candidates.numel(), device=Aij.device)[:n_targets]]
+    print(f"begin calculating target_zeros{datetime.now()}", flush=True)
     row_idx = sampled_ids // Aij.shape[1]
     col_idx = sampled_ids % Aij.shape[1]
-    target_zeros = [tuple(index) for index in torch.stack((row_idx, col_idx), dim=1).cpu().tolist()]
+    print(f"Begin target_zeros{datetime.now()}", flush=True)
+    target_zeros = list(zip(row_idx.cpu().tolist(), col_idx.cpu().tolist()))
 
     return Aij, targets, target_zeros
 

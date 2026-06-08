@@ -6,6 +6,7 @@ from visualize import plot_latent_embeddings
 from visualize import plot_loss_curve
 from visualize import plot_embeddings
 from evaluate import *
+from datetime import datetime
 
 def TrainModel(model, device="cpu", plots=False, targets=None, target_zeros=None):
     """
@@ -62,11 +63,12 @@ def TrainModel(model, device="cpu", plots=False, targets=None, target_zeros=None
         losses.append(loss.item())
 
         if epoch % 50 == 0 and epoch > 0:
+            print(f"Calculating metrics for epoch {epoch}...{datetime.now()}", flush=True)
             auc, _, f1_score, pr_auc, _ = validate(model, model.Aij, targets, target_zeros)
             aucs.append(auc)
             f1_scores.append(f1_score)
             pr_aucs.append(pr_auc)
-            print(f"Epoch {epoch}/{model.epochs} | Loss: {loss.item():.4f} | AUC (100%): {auc:.4f} | F1 Score: {f1_score:.4f} | PR AUC: {pr_auc:.4f}", flush=True)
+            print(f"Epoch {epoch}/{model.epochs} | Loss: {loss.item():.4f} | AUC (100%): {auc:.4f} | F1 Score: {f1_score:.4f} | PR AUC: {pr_auc:.4f}, {datetime.now()}", flush=True)
             losses_per_interval.append(loss.item())
             interval_steps.append(epoch)
 
