@@ -16,6 +16,7 @@ from src.dna_modelling.data import Data
 import scvi
 from scvi.model import PEAKVI
 from src.PeakVI.evaluate_peakvi import evaluate_peakvi
+from src.dna_modelling.evaluate import make_test_set
 
 print("modules loaded", flush=True)
 
@@ -39,10 +40,26 @@ print("device:", device, flush=True)
 
 # Load AnnData
 data_loader = Data()
-adata = data_loader.load_data(backed=True)
+adata = data_loader.load_data(backed=True)  # Load in backed mode to save memory
 print("adata loaded", flush=True)
 
-# Setup PeakVI
+# Create test set once before training
+print("Creating test set...", flush=True)
+from src.PeakVI.evaluate_peakvi import _to_dense_numpy
+import scipy.sparse as sp
+A = _to_dense_numpy(adata.X)
+device_tensor = torch.device("cpu")
+A_tensor = torch.tensor(A, dtype=torch.int8, device=device_tensor)
+A_mod, test_targets, test_target_zeros = make_test_set(A_tensor, percentage=0.1)
+
+# Remove test targets from training data
+if sp.issparse(adata.X):
+	adata.X = adata.X.tolil()
+	for row, col in test_targets:
+		adata.X[row, col] = 0
+	adata.X = adata.X.tocsr()
+
+# Setup PeakVI with modified adata
 scvi.model.PEAKVI.setup_anndata(adata)
 model = scvi.model.PEAKVI(adata)
 
@@ -54,6 +71,7 @@ with open(results_path, "w") as rf:
 	rf.write("Epoch,AUROC,AUPR,F1max\n")
 
 current_epoch = 0
+
 while current_epoch < max_epochs:
 	to_train = min(interval, max_epochs - current_epoch)
 	print(f"Training epochs {current_epoch+1}..{current_epoch+to_train}", flush=True)
@@ -61,7 +79,7 @@ while current_epoch < max_epochs:
 	current_epoch += to_train
 
 	print("evaluating model...", flush=True)
-	metrics = evaluate_peakvi(model, adata, test_fraction=0.1)
+	metrics = evaluate_peakvi(model, adata, targets=test_targets, target_zeros=test_target_zeros)
 
 	# append metrics to results CSV
 	with open(results_path, "a") as rf:

@@ -36,24 +36,29 @@ def evaluate_peakvi(
     increment: float = 0.001,
     use_z_mean: bool = True,
     batch_size: int = 128,
+    targets: List[Tuple[int, int]] = None,
+    target_zeros: List[Tuple[int, int]] = None,
 ) -> Dict[str, Any]:
     """Evaluate a trained `scvi.model.PEAKVI` model.
 
     Steps:
     - Extract binary accessibility matrix from `adata.X`.
-    - Randomly remove a fraction of 1s to create positive test targets and sample matching negatives.
+    - Use pre-computed targets and target_zeros if provided, otherwise create them.
     - Use `model.get_normalized_accessibility(..., return_numpy=True)` to get probability estimates.
     - Compute AUROC, AUPR (area under precision-recall), and max F1 over thresholds.
 
+    Args:
+        model: Trained PeakVI model.
+        adata: AnnData object with accessibility data.
+        test_fraction: Fraction of positives to use as test (only if targets not provided).
+        increment: Threshold increment for ROC/PR computation.
+        use_z_mean: Whether to use mean latent representation.
+        batch_size: Batch size for model inference.
+        targets: Pre-computed list of (cell, region) tuples for positive test set.
+        target_zeros: Pre-computed list of (cell, region) tuples for negative test set.
+
     Returns a dict with keys: `auroc`, `aupr`, `f1_max`, `auroc_curve`, `pr_curve`.
     """
-    # prepare data matrix
-    A = _to_dense_numpy(adata.X)
-    device = torch.device("cpu")
-    A_tensor = torch.tensor(A, dtype=torch.int8, device=device)
-
-    # create test set
-    A_mod, targets, target_zeros = make_test_set(A_tensor, percentage=test_fraction)
 
     # get probabilities from the model (cells x regions)
     probs = model.get_normalized_accessibility(
