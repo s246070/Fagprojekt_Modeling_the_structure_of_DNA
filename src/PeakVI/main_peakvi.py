@@ -1,9 +1,11 @@
 print("starting PeakVI main_peakvi.py", flush=True)
 
 import os
+import random
 import sys
 from pathlib import Path
 import torch
+import numpy as np
 
 ROOT_DIR = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT_DIR))
@@ -20,7 +22,17 @@ print("modules loaded", flush=True)
 # config from env
 max_epochs = int(os.getenv("EPOCHS", "200"))
 index = int(os.getenv("INDEX", "1"))
+seed = int(os.getenv("SEED", str(index)))
 model_dir = os.getenv("MODEL_DIR", f"models/peakvi_run{index}")
+
+# reproducibility
+random.seed(seed)
+np.random.seed(seed)
+torch.manual_seed(seed)
+if torch.cuda.is_available():
+    torch.cuda.manual_seed_all(seed)
+
+print(f"seed: {seed}", flush=True)
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 print("device:", device, flush=True)

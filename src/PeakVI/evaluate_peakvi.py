@@ -8,7 +8,13 @@ from ..dna_modelling.evaluate import make_test_set
 def _to_dense_numpy(X) -> np.ndarray:
     """Convert an AnnData X matrix (sparse or dense) to a dense numpy array of 0/1 values."""
     try:
-        # sparse matrices
+        # Load backed / lazy data into memory before conversion
+        if hasattr(X, "__getitem__") and not isinstance(X, (list, tuple, np.ndarray)):
+            try:
+                X = X[:]
+            except Exception:
+                pass
+
         import scipy.sparse as sp
 
         if sp.issparse(X):
