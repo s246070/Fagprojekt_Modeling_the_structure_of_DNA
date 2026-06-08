@@ -23,6 +23,9 @@ print(f"everything is imported!{datetime.now()}, device: {device}", flush=True)
 data_loader = Data()
 adata = data_loader.load_data(backed=True, full=True)
 
+# Remove collumns and rows with all zeros
+# adata = data_loader.remove_zero_rows_and_columns(adata)
+
 print(f"data added{datetime.now()}", flush=True)
 
 # Convert AnnData.X to tensor

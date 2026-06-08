@@ -24,6 +24,6 @@ export MKL_DYNAMIC=false
 export OMP_DYNAMIC=false
 
 export LS_DIM=2
-export INDEX=Big_data1
+export INDEX=3000
 export WEIGHTING=false
 python src/dna_modelling/main.py

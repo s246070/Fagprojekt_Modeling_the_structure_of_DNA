@@ -1,0 +1,19 @@
+#!/bin/bash
+#BSUB -J Data_script
+#BSUB -o outfiles/Data_script%J.out
+#BSUB -e outfiles/Data_script%J.err
+#BSUB -q hpc
+#BSUB -n 4
+#BSUB -R "rusage[mem=2GB]"
+#BSUB -R "span[hosts=1]"
+#BSUB -W 72:00
+# end of BSUB options
+
+cd "$LS_SUBCWD" || exit 1
+
+module purge
+module load python3/3.12.11
+
+source .venv/bin/activate
+
+python src/dna_modelling/data.py

@@ -75,13 +75,34 @@ class LDM(nn.Module):
             if torch.cuda.is_available():
                 torch.cuda.manual_seed_all(seed)
 
-    def forward(self):
-        dist = torch.cdist(self.embed_cells, self.embed_features, p=2)
-        logits = (self.cell_bias[:, None] + self.feature_bias[None, :] - dist)
+    def forward(self, cell_idx, feature_idx):
+        """
+        Compute logits only for selected cell-peak pairs.
+
+        cell_idx: Tensor of shape (batch_size,)
+        feature_idx: Tensor of shape (batch_size,)
+
+        returns: logits of shape (batch_size,)
+        """
+
+        cell_idx = cell_idx.to(self.device).long()
+        feature_idx = feature_idx.to(self.device).long()
+
+        z_cells = self.embed_cells[cell_idx]             # (batch_size, ls_dim)
+        z_features = self.embed_features[feature_idx]    # (batch_size, ls_dim)
+
+        dist = torch.norm(z_cells - z_features, dim=1)   # (batch_size,)
+
+        logits = (
+            self.cell_bias[cell_idx]
+            + self.feature_bias[feature_idx]
+            - dist
+        )
+
         return logits
 
-    def probabilities(self):
-        return torch.sigmoid(self.forward())
+    def probabilities(self, cell_idx, feature_idx):
+        return torch.sigmoid(self.forward(cell_idx, feature_idx))
 
     def save_model(self, path):
         torch.save(self.state_dict(), path)

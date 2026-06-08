@@ -8,6 +8,70 @@ from visualize import plot_embeddings
 from evaluate import *
 from datetime import datetime
 
+def sample_training_pairs(Aij, batch_size, positive_fraction=0.5, device="cpu"):
+    """
+    Samples positive and negative cell-peak pairs from Aij.
+
+    Aij should be a torch tensor with shape:
+        (n_cells, n_features)
+
+    Returns:
+        cell_idx, feature_idx, labels
+    """
+
+    n_pos = int(batch_size * positive_fraction)
+    n_neg = batch_size - n_pos
+
+    # Positive pairs where Aij == 1
+    pos_cells, pos_features = torch.where(Aij > 0)
+
+    pos_choice = torch.randint(
+        low=0,
+        high=pos_cells.shape[0],
+        size=(n_pos,),
+        device=Aij.device
+    )
+
+    batch_pos_cells = pos_cells[pos_choice]
+    batch_pos_features = pos_features[pos_choice]
+    batch_pos_labels = torch.ones(n_pos, device=Aij.device)
+
+    # Negative pairs sampled from zeros
+    n_cells, n_features = Aij.shape
+
+    neg_cells_list = []
+    neg_features_list = []
+
+    while len(neg_cells_list) < n_neg:
+        candidate_cells = torch.randint(
+            0, n_cells, size=(n_neg,), device=Aij.device
+        )
+        candidate_features = torch.randint(
+            0, n_features, size=(n_neg,), device=Aij.device
+        )
+
+        mask = Aij[candidate_cells, candidate_features] == 0
+
+        neg_cells_list.append(candidate_cells[mask])
+        neg_features_list.append(candidate_features[mask])
+
+        current = sum(x.numel() for x in neg_cells_list)
+        if current >= n_neg:
+            break
+
+    batch_neg_cells = torch.cat(neg_cells_list)[:n_neg]
+    batch_neg_features = torch.cat(neg_features_list)[:n_neg]
+    batch_neg_labels = torch.zeros(n_neg, device=Aij.device)
+
+    cell_idx = torch.cat([batch_pos_cells, batch_neg_cells])
+    feature_idx = torch.cat([batch_pos_features, batch_neg_features])
+    labels = torch.cat([batch_pos_labels, batch_neg_labels])
+
+    # Shuffle batch
+    perm = torch.randperm(batch_size, device=Aij.device)
+
+    return cell_idx[perm], feature_idx[perm], labels[perm]
+
 def TrainModel(model, device="cpu", plots=False, targets=None, target_zeros=None):
     """
     Train the DNA sequence embedding model.
@@ -55,12 +119,19 @@ def TrainModel(model, device="cpu", plots=False, targets=None, target_zeros=None
     for epoch in range(model.epochs):
         optimizer.zero_grad()
 
-        logits = model()
-        loss = criterion(logits, model.Aij)
+        cell_idx, feature_idx, labels = sample_training_pairs(
+            model.Aij,
+            batch_size=65536,
+            positive_fraction=0.5,
+            device=model.device
+        )
+
+        logits = model(cell_idx, feature_idx)
+
+        loss = criterion(logits, labels)
+
         loss.backward()
         optimizer.step()
-
-        losses.append(loss.item())
 
         if epoch % 50 == 0 and epoch > 0:
             start_time = datetime.now()

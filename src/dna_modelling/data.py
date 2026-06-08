@@ -2,6 +2,7 @@ from pathlib import Path
 from urllib.request import urlretrieve
 import scanpy as sc
 import scipy.sparse as sp
+import numpy as np
 import torch
 
 """
@@ -66,9 +67,68 @@ class Data():
 
         return X
     
+    def remove_zero_rows_and_columns(self, X):
+        """Remove rows and columns that are all zeros from X.
+
+        Supports scipy sparse matrices, numpy arrays, and torch tensors.
+        Returns the filtered array/matrix of the same type (for sparse and numpy)
+        or a torch tensor for tensor inputs.
+        """
+        # scipy sparse
+        if sp.issparse(X):
+            row_sums = np.asarray(X.sum(axis=1)).ravel()
+            col_sums = np.asarray(X.sum(axis=0)).ravel()
+            non_zero_row_mask = row_sums > 0
+            non_zero_col_mask = col_sums > 0
+            return X[non_zero_row_mask][:, non_zero_col_mask]
+
+        # numpy array
+        if isinstance(X, np.ndarray):
+            non_zero_row_mask = X.sum(axis=1) > 0
+            non_zero_col_mask = X.sum(axis=0) > 0
+            return X[non_zero_row_mask][:, non_zero_col_mask]
+
+        # torch tensor
+        if isinstance(X, torch.Tensor):
+            row_sums = X.sum(dim=1)
+            col_sums = X.sum(dim=0)
+            non_zero_row_mask = (row_sums > 0).to(torch.bool)
+            non_zero_col_mask = (col_sums > 0).to(torch.bool)
+            X = X[non_zero_row_mask, :]
+            X = X[:, non_zero_col_mask]
+            return X
+
+        # Fallback: try array-like interface
+        try:
+            non_zero_row_mask = X.sum(axis=1) > 0
+            non_zero_col_mask = X.sum(axis=0) > 0
+            return X[non_zero_row_mask][:, non_zero_col_mask]
+        except Exception:
+            raise TypeError("Unsupported type for remove_zero_rows_and_columns")
 
 
 if __name__ == "__main__":
     data = Data()
-    adata = data.load_data(backed=True)
-    print(adata)
+    adata = data.load_data(backed=True, full=True)
+
+    # Compute non-zero row/col masks without converting the whole matrix to a dense tensor
+    X = adata.X
+    if sp.issparse(X):
+        row_sums = np.asarray(X.sum(axis=1)).ravel()
+        col_sums = np.asarray(X.sum(axis=0)).ravel()
+        non_zero_row_mask = row_sums > 0
+        non_zero_col_mask = col_sums > 0
+    else:
+        try:
+            Xarr = X[:] if hasattr(X, "__getitem__") else X
+        except Exception:
+            Xarr = X
+        non_zero_row_mask = Xarr.sum(axis=1) > 0
+        non_zero_col_mask = Xarr.sum(axis=0) > 0
+
+    # Subset AnnData (this keeps it backed where possible and avoids loading full dense matrix)
+    adata_filtered = adata[non_zero_row_mask, non_zero_col_mask]
+    print("Original shape:", adata.shape, "Filtered shape:", adata_filtered.shape)
+
+    # Save filtered AnnData
+    sc.write_h5ad(adata_filtered, "data/hematopoiesis_GSE129785_FACS_sorted_no_zeros.h5ad")
