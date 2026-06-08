@@ -23,7 +23,7 @@ print(f"everything is imported!{datetime.now()}, device: {device}", flush=True)
 
 # Load AnnData
 data_loader = Data()
-adata = data_loader.load_data(backed=True, full=True)
+adata = data_loader.load_data(backed=True, full=False)
 
 print(f"data added{datetime.now()}", flush=True)
 
