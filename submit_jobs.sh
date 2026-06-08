@@ -39,6 +39,7 @@ for dim in "${LS_DIMS[@]}"; do
         export LS_DIM=$dim
         export INDEX=$idx
         export WEIGHTING=$weighting
+        export SEED=$idx
         python src/dna_modelling/main.py
       "
     done

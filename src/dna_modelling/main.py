@@ -9,6 +9,8 @@ from train import TrainModel
 from evaluate import *
 from datetime import datetime
 
+seed = int(os.getenv("SEED", 42))
+
 ls_dim = int(os.getenv("LS_DIM", 2))
 
 index = int(os.getenv("INDEX", 1))
@@ -43,7 +45,7 @@ model = LDM(
     lr=1e-3,
     weighting=weighting,
     index=index,
-    seed=42
+    seed=seed
 )
 
 print(f"beginning training{datetime.now()}", flush=True)
