@@ -26,8 +26,8 @@ class Data():
     def ensure_data_downloaded(self):
         self.data_directory.mkdir(parents=True, exist_ok=True)
 
-        if not self.data_path.exists():
-            print(f"Downloading datset to {self.data_path}...")
+        if not self.data_path.exists() or self.data_path.stat().st_size == 0:
+            print(f"Downloading dataset to {self.data_path}...")
             urlretrieve(self.backup_url, self.data_path)
 
     """
