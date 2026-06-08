@@ -6,7 +6,7 @@
 #BSUB -n 4
 #BSUB -R "rusage[mem=187GB]"
 #BSUB -R "span[hosts=1]"
-#BSUB -W 08:00
+#BSUB -W 72:00
 # end of BSUB options
 
 cd "$LS_SUBCWD" || exit 1
@@ -24,6 +24,6 @@ export MKL_DYNAMIC=false
 export OMP_DYNAMIC=false
 
 export LS_DIM=2
-export INDEX=10000
+export INDEX=Big_data1
 export WEIGHTING=false
 python src/dna_modelling/main.py

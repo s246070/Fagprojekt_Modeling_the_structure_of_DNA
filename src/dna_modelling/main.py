@@ -1,11 +1,7 @@
-print("starting main.py", flush=True)
-
 import torch
 import matplotlib.pyplot as plt
 import os
 import sys
-
-print("imported all libraries", flush=True)
 
 from data import Data
 from model import LDM
@@ -13,19 +9,15 @@ from train import TrainModel
 from evaluate import *
 from datetime import datetime
 
-print("imported all files", flush=True)
-
 ls_dim = int(os.getenv("LS_DIM", 2))
 
 index = int(os.getenv("INDEX", 1))
 
 weighting = os.getenv("WEIGHTING", "false").lower() == "true"
 
-print(f"everything is imported!{datetime.now()}", flush=True)
-
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
-print(device, flush=True)
+print(f"everything is imported!{datetime.now()}, device: {device}", flush=True)
 
 # Load AnnData
 data_loader = Data()
@@ -47,7 +39,7 @@ model = LDM(
     data=Aij,
     ls_dim=ls_dim,
     device=device,
-    epochs=51,
+    epochs=6000,
     lr=1e-3,
     weighting=weighting,
     index=index,
