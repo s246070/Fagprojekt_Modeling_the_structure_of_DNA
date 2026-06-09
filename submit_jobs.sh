@@ -24,7 +24,7 @@ for dim in "${LS_DIMS[@]}"; do
       -n 4 \
       -R "rusage[mem=9900]" \
       -R "span[hosts=1]" \
-      -W 08:00 \
+      -W 16:00 \
       bash -c "
         cd '$PWD' || exit 1
         module purge
