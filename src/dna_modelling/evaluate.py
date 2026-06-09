@@ -123,3 +123,109 @@ def validate(model, Aij, targets, target_zeros, increment=0.001):
     pr_auc = torch.trapz(precision_sorted, recall_sorted).item()
 
     return auc, auroc_data, f1_micro_score, pr_auc, pr_curve_data
+
+def validate_pairwise(model, target_ones, target_zeros, increment=0.001):
+    """
+    Evaluate held-out cell-peak indices pairwise and return metrics.
+
+    target_ones and target_zeros should contain held-out cell-peak indices.
+
+    Expected format:
+        target_ones = tensor/list/array of shape (n, 2)
+        target_zeros = tensor/list/array of shape (m, 2)
+
+    Returns:
+        auc: float (AUROC)
+        auroc_data: list of (FPR, TPR) tuples for thresholds
+        f1_micro_score: float (maximum micro F1 across thresholds)
+        pr_auc: float (area under precision-recall curve)
+        pr_curve_data: list of (precision, recall) tuples for thresholds
+    """
+
+    if increment <= 0:
+        raise ValueError("increment must be greater than 0")
+
+    was_training = model.training
+    model.eval()
+
+    with torch.no_grad():
+        target_ones = torch.as_tensor(target_ones, device=model.device).long()
+        target_zeros = torch.as_tensor(target_zeros, device=model.device).long()
+
+        pos_cell_idx = target_ones[:, 0]
+        pos_feature_idx = target_ones[:, 1]
+
+        neg_cell_idx = target_zeros[:, 0]
+        neg_feature_idx = target_zeros[:, 1]
+
+        pos_logits = model(pos_cell_idx, pos_feature_idx)
+        neg_logits = model(neg_cell_idx, neg_feature_idx)
+
+        logits = torch.cat([pos_logits, neg_logits])
+        labels = torch.cat([
+            torch.ones_like(pos_logits),
+            torch.zeros_like(neg_logits)
+        ])
+
+        probs = torch.sigmoid(logits)
+
+    # Restore original training/eval state
+    model.train(was_training)
+
+    probs = probs.detach().cpu()
+    labels = labels.detach().cpu()
+
+    # Separate positive and negative probabilities
+    pos_probs = probs[labels == 1]
+    neg_probs = probs[labels == 0]
+
+    n_pos = pos_probs.shape[0]
+    n_neg = neg_probs.shape[0]
+    if n_pos == 0 or n_neg == 0:
+        # Not enough data to compute ROC/PR
+        return 0.0, [], 0.0, 0.0, []
+
+    # thresholds
+    thresholds = torch.arange(0.0, 1.0 + increment, increment)
+    thresholds = thresholds[thresholds <= 1.0]
+
+    pos_exp = pos_probs.unsqueeze(1)
+    neg_exp = neg_probs.unsqueeze(1)
+    thresh_exp = thresholds.unsqueeze(0)
+
+    tp = (pos_exp >= thresh_exp).sum(dim=0)
+    fp = (neg_exp >= thresh_exp).sum(dim=0)
+    fn = (pos_exp < thresh_exp).sum(dim=0)
+    tn = (neg_exp < thresh_exp).sum(dim=0)
+
+    tpr = tp / (tp + fn).clamp(min=1)
+    fpr = fp / (fp + tn).clamp(min=1)
+    precision = tp / (tp + fp).clamp(min=1)
+    recall = tpr
+
+    # Micro-like F1 calculation (kept consistent with validate())
+    recall_micro = (tp + tn) / (tp + tn + fn + fp).clamp(min=1e-8)
+    precision_micro = recall_micro
+    f1_micro_score = 2 * (precision_micro * recall_micro) / (precision_micro + recall_micro).clamp(min=1e-8)
+    f1_micro_score = f1_micro_score.max().item()
+
+    auroc_data = [(fpr[i].item(), tpr[i].item()) for i in range(len(thresholds))]
+    pr_curve_data = [(precision[i].item(), recall[i].item()) for i in range(len(thresholds))]
+
+    # Compute AUC (AUROC)
+    curve_tensor = torch.tensor(auroc_data, dtype=torch.float32)
+    sorted_indices = torch.argsort(curve_tensor[:, 0])
+    fpr_sorted = curve_tensor[sorted_indices, 0]
+    tpr_sorted = curve_tensor[sorted_indices, 1]
+    auc = torch.trapz(tpr_sorted, fpr_sorted).item()
+
+    # Compute PR AUC
+    pr_curve_tensor = torch.tensor(pr_curve_data, dtype=torch.float32)
+    recall_vals = pr_curve_tensor[:, 1]
+    precision_vals = pr_curve_tensor[:, 0]
+    sorted_pr_indices = torch.argsort(recall_vals)
+    recall_sorted = recall_vals[sorted_pr_indices]
+    precision_sorted = precision_vals[sorted_pr_indices]
+    pr_auc = torch.trapz(precision_sorted, recall_sorted).item()
+
+    return auc, auroc_data, f1_micro_score, pr_auc, pr_curve_data

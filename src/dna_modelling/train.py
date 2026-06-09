@@ -135,7 +135,7 @@ def TrainModel(model, device="cpu", plots=False, targets=None, target_zeros=None
 
         if epoch % 50 == 0 and epoch > 0:
             start_time = datetime.now()
-            auc, _, f1_score, pr_auc, _ = validate(model, model.Aij, targets, target_zeros)
+            auc, _, f1_score, pr_auc, _ = validate_pairwise(model, targets, target_zeros)
             aucs.append(auc)
             f1_scores.append(f1_score)
             pr_aucs.append(pr_auc)
