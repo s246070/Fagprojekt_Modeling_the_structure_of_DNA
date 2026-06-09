@@ -9,7 +9,7 @@ INTERVAL=50
 QUEUE=hpc
 NUM_PROC=4
 MEM=9900
-WALLTIME=08:00
+WALLTIME=16:00
 
 echo "Submitting PeakVI jobs..."
 echo "========================================"
