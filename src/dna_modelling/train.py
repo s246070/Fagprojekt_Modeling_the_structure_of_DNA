@@ -146,6 +146,8 @@ def TrainModel(model, device="cpu", plots=False, targets=None, target_zeros=None
             with open(f"results/{ls_dim}_weighting_{model.weighting}_run{model.index}.csv", "a") as f:
                 f.write(f"{loss.item()},{auc},{f1_score},{pr_auc}\n")
 
+            model.save(f"models/ldm_ls{ls_dim}_weighting_{model.weighting}_run{model.index}.pt")
+
             if plots:
                 plot_loss_curve(
                     ls_dim=ls_dim,
