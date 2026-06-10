@@ -56,11 +56,12 @@ def TrainModel(model, device="cpu", plots=False, targets=None, target_zeros=None
         optimizer.zero_grad()
 
         logits = model()
-        loss = criterion(logits, model.Aij)
-        loss.backward()
-        optimizer.step()
 
-        losses.append(loss.item())
+        loss = criterion(logits, model.Aij)
+
+        loss.backward()
+
+        optimizer.step()
 
         if epoch % 50 == 0 and epoch > 0:
             start_time = datetime.now()
@@ -71,7 +72,7 @@ def TrainModel(model, device="cpu", plots=False, targets=None, target_zeros=None
             print(f"Start: {start_time} | End: {datetime.now()} | Epoch {epoch}/{model.epochs} | Loss: {loss.item():.4f} | AUC (100%): {auc:.4f} | F1 Score: {f1_score:.4f} | PR AUC: {pr_auc:.4f}", flush=True)
             losses_per_interval.append(loss.item())
             interval_steps.append(epoch)
-
+            model.save_model(f"models/ldm_ls{ls_dim}_weighting_{model.weighting}_run{model.index}.pth")
             with open(f"results/{ls_dim}_weighting_{model.weighting}_run{model.index}.csv", "a") as f:
                 f.write(f"{loss.item()},{auc},{f1_score},{pr_auc}\n")
 

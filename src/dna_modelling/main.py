@@ -41,8 +41,8 @@ model = LDM(
     data=Aij,
     ls_dim=ls_dim,
     device=device,
-    epochs=6000,
-    lr=1e-3,
+    epochs=1001,
+    lr=0.03,
     weighting=weighting,
     index=index,
     seed=seed
@@ -56,9 +56,6 @@ losses = TrainModel(model, device=device, plots=False, targets=targets, target_z
 print(f"training complete{datetime.now()}", flush=True)
 
 auc, auc_data, f1_score, pr_auc, pr_curve_data = validate(model, Aij, targets, target_zeros)
-
-#save model in models folder
-LDM.save_model(model, f"models/ldm_ls{ls_dim}_weighting_{weighting}_run{index}.pth")
 
 print(f"AUROC: {auc:.4f}", flush=True)
 print(f"F1 Score: {f1_score:.4f}", flush=True)
