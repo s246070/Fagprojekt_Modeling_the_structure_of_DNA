@@ -17,17 +17,19 @@ class Data():
     def __init__(self):
         self.data_directory = Path("data")
         self.data_path = self.data_directory / "lung_atlas_preprocessed.h5ad"
+        self.data_path_full = self.data_directory / "hematopoiesis_GSE129785_FACS_sorted.h5ad"
         self.backup_url = "https://figshare.com/ndownloader/files/52859288"
 
     """
     This method checks if the data file exists at the specified path. 
     If it does not exist, it creates the necessary directories and downloads the data from the backup URL.
     """
-    def ensure_data_downloaded(self):
-        self.data_directory.mkdir(parents=True, exist_ok=True)
+    def ensure_data_downloaded(self, path=None):
+        if path is None:
+            path = self.data_directory
 
-        if not self.data_path.exists() or self.data_path.stat().st_size == 0:
-            print(f"Downloading dataset to {self.data_path}...")
+        if not path.exists():
+            print(f"Downloading datset to {self.data_path}...")
             urlretrieve(self.backup_url, self.data_path)
 
     """
@@ -35,12 +37,12 @@ class Data():
     If the 'backed' parameter is set to True, it loads the data into the hard drive.
     If 'backed' is False, it loads the entire dataset into memory.
     """
-    def load_data(self, backed=True):
-        self.ensure_data_downloaded()
+    def load_data(self, backed=True, full=False):
+        self.ensure_data_downloaded(path=self.data_path_full if full else self.data_path)
 
         if backed:
-            return sc.read_h5ad(self.data_path, backed="r")
-        return sc.read_h5ad(self.data_path)
+            return sc.read_h5ad(self.data_path, backed="r") if not full else sc.read_h5ad(self.data_path_full, backed="r")
+        return sc.read_h5ad(self.data_path) if not full else sc.read_h5ad(self.data_path_full)
 
     def anndata_to_tensor(self, adata, device, make_binary=True):
         X = adata.X
