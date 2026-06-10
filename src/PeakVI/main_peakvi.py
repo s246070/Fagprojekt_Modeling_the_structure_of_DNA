@@ -42,6 +42,7 @@ print("device:", device, flush=True)
 data_loader = Data()
 adata = data_loader.load_data(backed=True)  # Load in backed mode to save memory
 print("adata loaded", flush=True)
+print(type(adata.X), flush=True)
 
 # Create test set once before training
 print("Creating test set...", flush=True)
@@ -52,12 +53,24 @@ device_tensor = torch.device("cpu")
 A_tensor = torch.tensor(A, dtype=torch.int8, device=device_tensor)
 A_mod, test_targets, test_target_zeros = make_test_set(A_tensor, percentage=0.1)
 
+# Switch to an in-memory AnnData before mutating X.
+if getattr(adata, "isbacked", False):
+	adata = adata.to_memory()
+	print("Converted backed adata to in-memory copy", flush=True)
+
 # Remove test targets from training data
-if sp.issparse(adata.X):
-	adata.X = adata.X.tolil()
+X = adata.X
+if sp.issparse(X):
+	X = X.tolil()
 	for row, col in test_targets:
-		adata.X[row, col] = 0
-	adata.X = adata.X.tocsr()
+		X[row, col] = 0
+	adata.X = X.tocsr()
+	print("Test targets removed from sparse adata.X", flush=True)
+else:
+	for row, col in test_targets:
+		X[row, col] = 0
+	adata.X = X
+	print("Test targets removed from dense adata.X", flush=True)
 
 # Setup PeakVI with modified adata
 scvi.model.PEAKVI.setup_anndata(adata)
