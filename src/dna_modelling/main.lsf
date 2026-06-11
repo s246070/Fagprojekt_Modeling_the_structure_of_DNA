@@ -23,7 +23,7 @@ export NUMEXPR_NUM_THREADS=$LSB_DJOB_NUMPROC
 export MKL_DYNAMIC=false
 export OMP_DYNAMIC=false
 
-export LS_DIM=3
-export INDEX=Big_data1
+export LS_DIM=2
+export INDEX=4000
 export WEIGHTING=false
 python src/dna_modelling/main.py
