@@ -1,10 +1,10 @@
 #!/bin/bash
-#BSUB -J batch_Script_2
-#BSUB -o outfiles/batch_Script_2%J.out
-#BSUB -e outfiles/batch_Script_2%J.err
+#BSUB -J maketest_Script
+#BSUB -o outfiles/maketest_Script%J.out
+#BSUB -e outfiles/maketest_Script%J.err
 #BSUB -q hpc
 #BSUB -n 4
-#BSUB -R "rusage[mem=40GB]"
+#BSUB -R "rusage[mem=125GB]"
 #BSUB -R "span[hosts=1]"
 #BSUB -W 72:00
 # end of BSUB options
@@ -23,7 +23,4 @@ export NUMEXPR_NUM_THREADS=$LSB_DJOB_NUMPROC
 export MKL_DYNAMIC=false
 export OMP_DYNAMIC=false
 
-export LS_DIM=2
-export INDEX=4000
-export WEIGHTING=false
-python src/dna_modelling/main_2.py
+python src/dna_modelling/maketestsets.py

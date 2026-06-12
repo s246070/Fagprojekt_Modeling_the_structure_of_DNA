@@ -75,9 +75,20 @@ class LDM(nn.Module):
             if torch.cuda.is_available():
                 torch.cuda.manual_seed_all(seed)
 
-    def forward(self):
-        dist = torch.cdist(self.embed_cells, self.embed_features, p=2)
-        logits = (self.cell_bias[:, None] + self.feature_bias[None, :] - dist)
+    def forward(self, rows=None):
+        if rows is None:
+            # Full matrix: [n_cells, n_features]
+            embed_cells = self.embed_cells
+            cell_bias = self.cell_bias
+        else:
+            # Batched rows: [batch_size, n_features]
+            embed_cells = self.embed_cells[rows]
+            cell_bias = self.cell_bias[rows]
+        
+        dist = torch.cdist(embed_cells, self.embed_features, p=2)
+
+        logits = (cell_bias[:, None] + self.feature_bias[None, :] - dist)
+
         return logits
 
     def probabilities(self):
