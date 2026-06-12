@@ -179,11 +179,15 @@ cython_debug/
 data/
 
 results
+results_1/
+results_2/
 
 uv.lock
 uv
 
 models/
+models_1/
+
 
 plots/
 
