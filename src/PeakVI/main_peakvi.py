@@ -3,6 +3,7 @@ import scvi
 import torch
 import sys
 from pathlib import Path
+import scipy.sparse as sp
 
 # Add parent directory: project/
 parent_dir = Path(__file__).resolve().parents[1]
@@ -10,12 +11,18 @@ sys.path.append(str(parent_dir))
 
 from dna_modelling.data import Data
 
+torch.set_num_threads(4)
+torch.set_num_interop_threads(1)
+
 # -----------------------------
 # 1. Load AnnData
 # -----------------------------
 # Load AnnData
 data_loader = Data()
-adata = data_loader.load_data(backed=True, full=True)  # Load in backed mode to save memory
+adata = data_loader.load_data(backed=False, full=True)
+
+if sp.issparse(adata.X) and not isinstance(adata.X, sp.csr_matrix):
+    adata.X = adata.X.tocsr()
 
 
 # -----------------------------
@@ -35,8 +42,13 @@ model = scvi.model.PEAKVI(
 )
 
 model.train(
-    max_epochs=1000,
-    accelerator="auto"
+    max_epochs=200,
+    accelerator="cpu",
+    devices=1,
+    batch_size=8192 * 2,
+    early_stopping=True,
+    early_stopping_patience=20,
+    datasplitter_kwargs={"num_workers": 0},
 )
 
 
