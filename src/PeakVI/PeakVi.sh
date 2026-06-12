@@ -4,7 +4,7 @@
 #BSUB -e outfiles/Peak_Script_2%J.err
 #BSUB -q hpc
 #BSUB -n 4
-#BSUB -R "rusage[mem=100GB]"
+#BSUB -R "rusage[mem=60GB]"
 #BSUB -R "span[hosts=1]"
 #BSUB -W 48:00
 # end of BSUB options

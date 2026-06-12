@@ -38,14 +38,14 @@ scvi.model.PEAKVI.setup_anndata(
 # -----------------------------
 model = scvi.model.PEAKVI(
     adata,
-    n_latent=2
+    n_latent=16
 )
 
 model.train(
     max_epochs=200,
     accelerator="cpu",
     devices=1,
-    batch_size=8192 * 2,
+    batch_size=8192,
     early_stopping=True,
     early_stopping_patience=20,
     datasplitter_kwargs={"num_workers": 0},
@@ -55,33 +55,33 @@ model.train(
 # -----------------------------
 # 4. Extract latent embeddings
 # -----------------------------
-latent_2d = model.get_latent_representation()
+latent_16d = model.get_latent_representation()
 
-print(latent_2d.shape)
-# (n_cells, 2)
+print(latent_16d.shape)
+# (n_cells, 16)
 
 
 # -----------------------------
 # 5. Convert to PyTorch tensor
 # -----------------------------
 latent_tensor = torch.tensor(
-    latent_2d,
+    latent_16d,
     dtype=torch.float32
 )
 
 print(latent_tensor.shape)
-# torch.Size([n_cells, 2])
+# torch.Size([n_cells, 16])
 
 
 # -----------------------------
 # 6. Save as .pth file
 # -----------------------------
-torch.save(latent_tensor, "models/peakvi_latent_2d.pth")
+torch.save(latent_tensor, "models/peakvi_latent_16d.pth")
 torch.save(
     {
         "latent": latent_tensor,
         "cell_ids": list(adata.obs_names),
-        "n_latent": 2,
+        "n_latent": 16,
     },
-    "models/peakvi_latent_2d_extra.pth"
+    "models/peakvi_latent_16d_extra.pth"
 )
