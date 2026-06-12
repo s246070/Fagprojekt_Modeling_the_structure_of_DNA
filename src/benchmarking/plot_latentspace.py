@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap
 import numpy as np
 
-name = "ldm_ls2_weighting_False_run4000"
+name = "ldm_ls2_weighting_False_run100"
 
 model = torch.load(f"models/{name}.pth")
 data = model['embed_cells'].cpu().detach().numpy()

@@ -13,4 +13,4 @@ neigh = KNeighborsClassifier(n_neighbors=5, metric='euclidean')
 neigh.fit(data, cell_types)
 pred = neigh.predict(data)
 
-print(accuracy_score(pred, cell_types))
+print(accuracy_score(cell_types, pred))
