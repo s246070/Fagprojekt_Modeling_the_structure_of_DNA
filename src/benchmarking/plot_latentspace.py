@@ -1,6 +1,5 @@
 import torch
 import matplotlib.pyplot as plt
-from matplotlib.colors import ListedColormap
 import numpy as np
 
 name = "ldm_ls2_weighting_False_run100"

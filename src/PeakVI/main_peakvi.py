@@ -1,4 +1,3 @@
-import scanpy as sc
 import scvi
 import torch
 import sys
