@@ -15,6 +15,7 @@ def make_test_set(Aij, percentage=0.1):
     if not 0 <= percentage <= 1:
         raise ValueError("percentage must be between 0 and 1")
 
+    Aij = Aij.clone()
     connected_mask = Aij == 1
     sampled_mask = torch.rand(Aij.shape, device=Aij.device) < percentage
     remove_mask = connected_mask & sampled_mask
@@ -45,14 +46,12 @@ def make_test_set(Aij, percentage=0.1):
 
     return Aij, targets, target_zeros
 
-
-def validate(model, Aij, targets, target_zeros, increment=0.001):
+def validate(model, targets, target_zeros, increment=0.001):
     """
     Evaluates the accuracy of predictions against the removed connections.
 
     Args:
         model: The trained LDM model.
-        Aij: The modified cell x peak accessibility matrix with some connections removed (tensor).
         targets: A list of tuples (cell_index, peak_index) representing the removed connections.
         target_zeros: A list of tuples (cell_index, peak_index) representing the negative connections.
         increment: Amount of steps between 0 and 1 for calculating TPR and FPR at different thresholds (default: 0.001).
