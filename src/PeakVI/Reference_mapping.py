@@ -1,12 +1,5 @@
-from scvi_colab import install
-import os
-import tempfile
-import anndata
-import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
 import scanpy as sc
-import scrublet as scr
 import scvi
 import seaborn as sns
 import torch

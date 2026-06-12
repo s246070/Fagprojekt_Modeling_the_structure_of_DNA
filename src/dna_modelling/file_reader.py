@@ -8,7 +8,7 @@ def read_file(name):
     pr_aucs = []
     with open(f"data/{name}.out", "r") as f:
         lines = f.readlines()
-        if lines[:5] == "Epoch"
+        if lines[:5] == "Epoch":
             loss, auc, f1_score, pr_auc = lines[0].split("|")
             loss = float(loss.split(":")[1].strip())
             auc = float(auc.split(":")[1].strip())

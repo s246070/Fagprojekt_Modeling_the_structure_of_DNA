@@ -1,14 +1,11 @@
-import os
 # os.environ["MPLBACKEND"] = "TkAgg"
 
-import matplotlib
 # matplotlib.use("TkAgg", force=True)
 
 import numpy as np
 import scipy.sparse as sp
 # import igraph as ig
 # from scipy.sparse import csr_matrix
-import scanpy as sc
 import matplotlib.pyplot as plt
 from pathlib import Path
 import umap
@@ -69,7 +66,7 @@ def plot_bipartite_graph(adata, output_path, max_cells_plot=120, max_features_pl
     layout = graph_plot.layout_bipartite(types=graph_plot.vs["type"])
 
     fig, ax = plt.subplots(figsize=(11, 8))
-    ig.plot(
+    fig.plot(
         graph_plot,
         target=ax,
         layout=layout,

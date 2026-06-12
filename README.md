@@ -7,24 +7,13 @@ A short description of the project.
 
 The directory structure of the project looks like this:
 ```txt
-├── .github/                  # Github actions and dependabot
-│   ├── dependabot.yaml
-│   └── workflows/
-│       └── tests.yaml
-├── configs/                  # Configuration files
 ├── data/                     # Data directory
 │   ├── processed
 │   └── raw
-├── docs/                     # Documentation
-│   ├── mkdocs.yml
-│   └── source/
-│       └── index.md
 ├── models/                   # Trained models
 ├── notebooks/                # Jupyter notebooks
-├── reports/                  # Reports
-│   └── figures/
 ├── src/                      # Source code
-│   ├── project_name/
+│   ├── dna_modelling/        # LDM implementation
 │   │   ├── __init__.py
 │   │   ├── api.py
 │   │   ├── data.py
@@ -32,14 +21,15 @@ The directory structure of the project looks like this:
 │   │   ├── models.py
 │   │   ├── train.py
 │   │   └── visualize.py
-└── tests/                    # Tests
-│   ├── __init__.py
-│   ├── test_api.py
-│   ├── test_data.py
-│   └── test_model.py
+│   ├── PeakVI/               # PeakVI implementation
+│   │   ├── __init__.py
+│   │   ├── main_peakvi.py
+│   │   ├── 
+│   │   ├── 
+│   │   ├── 
+│   │   └──
+│   └── Simba/ 
 ├── .gitignore
-├── .pre-commit-config.yaml
-├── LICENSE
 ├── pyproject.toml            # Python project file
 ├── README.md                 # Project README
 └── tasks.py                  # Project tasks
