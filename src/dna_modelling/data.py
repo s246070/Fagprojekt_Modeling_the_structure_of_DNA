@@ -43,6 +43,15 @@ class Data():
         if backed:
             return sc.read_h5ad(self.data_path, backed="r") if not full else sc.read_h5ad(self.data_path_full, backed="r")
         return sc.read_h5ad(self.data_path) if not full else sc.read_h5ad(self.data_path_full)
+    
+    def load_test_set(self, path, device):
+        adata = sc.read_h5ad(path)
+        Aij = self.anndata_to_tensor(adata, device=device, make_binary=True)
+        targets = adata.uns["targets"]
+        target_zeros = adata.uns["target_zeros"]
+        return Aij, targets, target_zeros
+
+
 
     def anndata_to_tensor(self, adata, device, make_binary=True):
         X = adata.X
@@ -65,7 +74,7 @@ class Data():
             X = (X > 0).float()
 
         return X
-    
+
 
 
 if __name__ == "__main__":

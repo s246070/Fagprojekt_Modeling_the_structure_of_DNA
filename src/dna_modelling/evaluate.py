@@ -1,4 +1,5 @@
 import torch
+from datetime import datetime
 
 def make_test_set(Aij, percentage=0.1):
     """
@@ -14,38 +15,43 @@ def make_test_set(Aij, percentage=0.1):
     if not 0 <= percentage <= 1:
         raise ValueError("percentage must be between 0 and 1")
 
+    Aij = Aij.clone()
     connected_mask = Aij == 1
     sampled_mask = torch.rand(Aij.shape, device=Aij.device) < percentage
     remove_mask = connected_mask & sampled_mask
-
+    print(f"begin removing connections{datetime.now()}", flush=True)
     Aij[remove_mask] = 0
     removed_indices = remove_mask.nonzero(as_tuple=True)
+    print(f"begin target thing{datetime.now()}", flush=True)
     targets = list(zip(removed_indices[0].cpu().tolist(), removed_indices[1].cpu().tolist()))
 
+    print(f"Doing n targets{datetime.now()}", flush=True)
     n_targets = removed_indices[0].shape[0]
     if n_targets == 0:
         return Aij, targets, []
 
+    print(f"Removed some connections, now sampling negatives{datetime.now()}", flush=True)
     # Sample negatives from original zero entries without replacement.
     zero_candidates = (~connected_mask).flatten().nonzero(as_tuple=False).squeeze(1)
     if zero_candidates.numel() < n_targets:
         raise ValueError("Not enough zero entries to sample target_zeros without replacement")
 
+    print(f"begin sampling target_zeros{datetime.now()}", flush=True)
     sampled_ids = zero_candidates[torch.randperm(zero_candidates.numel(), device=Aij.device)[:n_targets]]
+    print(f"begin calculating target_zeros{datetime.now()}", flush=True)
     row_idx = sampled_ids // Aij.shape[1]
     col_idx = sampled_ids % Aij.shape[1]
+    print(f"Begin target_zeros{datetime.now()}", flush=True)
     target_zeros = list(zip(row_idx.cpu().tolist(), col_idx.cpu().tolist()))
 
     return Aij, targets, target_zeros
 
-
-def validate(model, Aij, targets, target_zeros, increment=0.001):
+def validate(model, targets, target_zeros, increment=0.001):
     """
     Evaluates the accuracy of predictions against the removed connections.
 
     Args:
         model: The trained LDM model.
-        Aij: The modified cell x peak accessibility matrix with some connections removed (tensor).
         targets: A list of tuples (cell_index, peak_index) representing the removed connections.
         target_zeros: A list of tuples (cell_index, peak_index) representing the negative connections.
         increment: Amount of steps between 0 and 1 for calculating TPR and FPR at different thresholds (default: 0.001).

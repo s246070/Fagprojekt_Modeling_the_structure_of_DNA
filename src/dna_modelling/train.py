@@ -6,8 +6,9 @@ from visualize import plot_latent_embeddings
 from visualize import plot_loss_curve
 from visualize import plot_embeddings
 from evaluate import *
+from datetime import datetime
 
-def TrainModel(model, device="cpu", plots=False, targets=None, target_zeros=None):
+def TrainModel(model, device="cpu", plots=False, targets=None, target_zeros=None, batching=False, num_blocks=10):
     """
     Train the DNA sequence embedding model.
 
@@ -51,51 +52,146 @@ def TrainModel(model, device="cpu", plots=False, targets=None, target_zeros=None
     interval_steps = []
     ls_dim = model.ls_dim
     print(f"Starting training for {model.epochs} epochs with learning rate {model.lr} and latent space dimension {ls_dim}...", flush=True)
-    for epoch in range(model.epochs):
-        optimizer.zero_grad()
+    
+    if batching:
+        n_nodes = model.Aij.shape[0]
 
-        logits = model()
-        loss = criterion(logits, model.Aij)
-        loss.backward()
-        optimizer.step()
+        for epoch in range(model.epochs):
+            epoch_loss = 0.0
 
-        losses.append(loss.item())
+            # Shuffle row indices each epoch
+            perm = torch.randperm(n_nodes, device=device)
 
-        if epoch % 50 == 0 and epoch > 0:
-            auc, _, f1_score, pr_auc, _ = validate(model, model.Aij, targets, target_zeros)
-            aucs.append(auc)
-            f1_scores.append(f1_score)
-            pr_aucs.append(pr_auc)
-            print(f"Epoch {epoch}/{model.epochs} | Loss: {loss.item():.4f} | AUC (100%): {auc:.4f} | F1 Score: {f1_score:.4f} | PR AUC: {pr_auc:.4f}", flush=True)
-            losses_per_interval.append(loss.item())
-            interval_steps.append(epoch)
+            # Split rows into blocks
+            blocks = torch.chunk(perm, num_blocks)
 
-            if epoch % 200 == 0 and plots:
-                plot_loss_curve(
-                    ls_dim=ls_dim,
-                    interval_steps=interval_steps,
-                    losses_per_interval=losses_per_interval,
+            for batch_idx in blocks:
+                optimizer.zero_grad()
+
+                # Forward only selected rows
+                logits = model(rows=batch_idx)
+
+                # Target block: same rows from Aij
+                target_batch = model.Aij[batch_idx, :].to(device)
+
+                loss = criterion(logits, target_batch)
+
+                loss.backward()
+                optimizer.step()
+
+                # Weighted average loss over all row-blocks
+                epoch_loss += loss.item() * (len(batch_idx) / n_nodes)
+
+            losses.append(epoch_loss)
+
+            if epoch % 50 == 0 and epoch > 0:
+                start_time = datetime.now()
+
+                auc, _, f1_score, pr_auc, _ = validate(
+                    model,
+                    targets,
+                    target_zeros
                 )
-                if model.ls_dim > 2:
-                    plot_latent_embeddings(
-                        model=model,
+
+                aucs.append(auc)
+                f1_scores.append(f1_score)
+                pr_aucs.append(pr_auc)
+
+                print(
+                    f"Start: {start_time} | End: {datetime.now()} | "
+                    f"Epoch {epoch}/{model.epochs} | "
+                    f"Loss: {epoch_loss:.4f} | "
+                    f"AUC (100%): {auc:.4f} | "
+                    f"F1 Score: {f1_score:.4f} | "
+                    f"PR AUC: {pr_auc:.4f}",
+                    flush=True
+                )
+
+                losses_per_interval.append(epoch_loss)
+                interval_steps.append(epoch)
+
+                model.save_model(
+                    f"models/ldm_ls{ls_dim}_weighting_{model.weighting}_run{model.index}.pth"
+                )
+
+                with open(
+                    f"results/{ls_dim}_weighting_{model.weighting}_run{model.index}.csv",
+                    "a"
+                ) as f:
+                    f.write(f"{epoch_loss},{auc},{f1_score},{pr_auc}\n")
+
+                if plots:
+                    plot_loss_curve(
                         ls_dim=ls_dim,
-                        epoch=epoch,
-                        interval_steps=interval_steps,
-                        losses_per_interval=losses_per_interval,
-                    )
-                else:
-                    plot_embeddings(
-                        model=model,
-                        ls_dim=ls_dim,
-                        epoch=epoch,
                         interval_steps=interval_steps,
                         losses_per_interval=losses_per_interval,
                     )
 
-    with open(f"results/{ls_dim}_weighting_{model.weighting}_run{model.index}.csv", "w") as f:
-        f.write("Loss,AUC,F1-Score,PR-AUC\n")
-        for i in range(len(aucs)):
-            f.write(f"{losses[i*50]},{aucs[i]},{f1_scores[i]},{pr_aucs[i]}\n")
+                    if model.ls_dim > 2:
+                        plot_latent_embeddings(
+                            model=model,
+                            ls_dim=ls_dim,
+                            epoch=epoch,
+                            interval_steps=interval_steps,
+                            losses_per_interval=losses_per_interval,
+                        )
+                    else:
+                        plot_embeddings(
+                            model=model,
+                            ls_dim=ls_dim,
+                            epoch=epoch,
+                            interval_steps=interval_steps,
+                            losses_per_interval=losses_per_interval,
+                        )
 
-    return losses
+        return losses
+
+    else:
+        for epoch in range(model.epochs):
+            optimizer.zero_grad()
+
+            logits = model()
+
+            loss = criterion(logits, model.Aij)
+
+            loss.backward()
+
+            optimizer.step()
+
+            if epoch % 50 == 0 and epoch > 0:
+                start_time = datetime.now()
+                auc, _, f1_score, pr_auc, _ = validate(model, model.Aij, targets, target_zeros)
+                aucs.append(auc)
+                f1_scores.append(f1_score)
+                pr_aucs.append(pr_auc)
+                print(f"Start: {start_time} | End: {datetime.now()} | Epoch {epoch}/{model.epochs} | Loss: {loss.item():.4f} | AUC (100%): {auc:.4f} | F1 Score: {f1_score:.4f} | PR AUC: {pr_auc:.4f}", flush=True)
+                losses_per_interval.append(loss.item())
+                interval_steps.append(epoch)
+                model.save_model(f"models/ldm_ls{ls_dim}_weighting_{model.weighting}_run{model.index}.pth")
+                with open(f"results/{ls_dim}_weighting_{model.weighting}_run{model.index}.csv", "a") as f:
+                    f.write(f"{loss.item()},{auc},{f1_score},{pr_auc}\n")
+
+                if plots:
+                    plot_loss_curve(
+                        ls_dim=ls_dim,
+                        interval_steps=interval_steps,
+                        losses_per_interval=losses_per_interval,
+                    )
+                    if model.ls_dim > 2:
+                        plot_latent_embeddings(
+                            model=model,
+                            ls_dim=ls_dim,
+                            epoch=epoch,
+                            interval_steps=interval_steps,
+                            losses_per_interval=losses_per_interval,
+                        )
+                    else:
+                        plot_embeddings(
+                            model=model,
+                            ls_dim=ls_dim,
+                            epoch=epoch,
+                            interval_steps=interval_steps,
+                            losses_per_interval=losses_per_interval,
+                        )
+
+        return losses

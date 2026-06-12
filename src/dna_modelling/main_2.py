@@ -1,5 +1,4 @@
 import torch
-import matplotlib.pyplot as plt
 import os
 import sys
 
@@ -21,20 +20,11 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 
 print(f"everything is imported!{datetime.now()}, device: {device}", flush=True)
 
-# Load AnnData
-data_loader = Data()
-adata = data_loader.load_data(backed=True, full=True)
-
-print(f"data added{datetime.now()}", flush=True)
-
-# Convert AnnData.X to tensor
-Aij = data_loader.anndata_to_tensor(adata, device=device, make_binary=True)
+# Load Aij, targets, and target_zeros from data/train_sets
+Aij, targets, target_zeros = Data().load_test_set(f"data/train_sets/Aij_train_{seed}.h5ad", device=device)
 
 print(f"converted data to tensor{datetime.now()}", flush=True)
 
-Aij, targets, target_zeros = make_test_set(Aij, percentage=0.1)
-
-print(f"created test set{datetime.now()}", flush=True)
 
 # Initialize model
 model = LDM(
@@ -42,7 +32,7 @@ model = LDM(
     ls_dim=ls_dim,
     device=device,
     epochs=1001,
-    lr=0.03,
+    lr=0.05,
     weighting=weighting,
     index=index,
     seed=seed
@@ -51,7 +41,7 @@ model = LDM(
 print(f"beginning training{datetime.now()}", flush=True)
 
 # Train
-losses = TrainModel(model, device=device, plots=False, targets=targets, target_zeros=target_zeros, batching=True, num_blocks=1000)
+losses = TrainModel(model, device=device, plots=False, targets=targets, target_zeros=target_zeros, batching=True, num_blocks=100)
 
 print(f"training complete{datetime.now()}", flush=True)
 
