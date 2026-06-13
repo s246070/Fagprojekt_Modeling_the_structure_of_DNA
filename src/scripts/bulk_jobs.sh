@@ -27,7 +27,7 @@ for dim in "${LS_DIMS[@]}"; do
       cd '$PWD' || exit 1
       module purge
       module load python3/3.12.11
-      source .venv/bin/activate
+      source .venv-cpu/bin/activate
       export OMP_NUM_THREADS=4
       export OPENBLAS_NUM_THREADS=4
       export MKL_NUM_THREADS=4

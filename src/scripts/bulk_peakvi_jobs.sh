@@ -22,7 +22,7 @@ for seed in "${SEEDS[@]}"; do
 cd "$PWD" || exit 1
 module purge
 module load python3/3.12.11
-source .venv/bin/activate
+source .venv-cpu/bin/activate
 export OMP_NUM_THREADS=$NUM_PROC
 export OPENBLAS_NUM_THREADS=$NUM_PROC
 export MKL_NUM_THREADS=$NUM_PROC

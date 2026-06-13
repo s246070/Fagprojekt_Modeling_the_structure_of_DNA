@@ -14,7 +14,7 @@ cd "$LS_SUBCWD" || exit 1
 module purge
 module load python3/3.12.11
 
-source .venv/bin/activate
+source .venv-cpu/bin/activate
 
 export OMP_NUM_THREADS=$LSB_DJOB_NUMPROC
 export OPENBLAS_NUM_THREADS=$LSB_DJOB_NUMPROC

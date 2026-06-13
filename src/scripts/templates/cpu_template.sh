@@ -1,7 +1,7 @@
 #!/bin/bash
-#BSUB -J TEST_Script_2
-#BSUB -o outfiles/TEST_Script_2%J.out
-#BSUB -e outfiles/TEST_Script_2%J.err
+#BSUB -J CPU_Job
+#BSUB -o outfiles/CPU_Job_%J.out
+#BSUB -e outfiles/CPU_Job_%J.err
 #BSUB -q hpc
 #BSUB -n 4
 #BSUB -R "rusage[mem=30GB]"
@@ -10,6 +10,8 @@
 # end of BSUB options
 
 cd "$LS_SUBCWD" || exit 1
+
+mkdir -p outfiles
 
 module purge
 module load python3/3.12.11
@@ -23,14 +25,12 @@ export NUMEXPR_NUM_THREADS=$LSB_DJOB_NUMPROC
 export MKL_DYNAMIC=false
 export OMP_DYNAMIC=false
 
-python src/dna_modelling/main.py \
-	--seed 1 \
-	--ls-dim 16 \
-	--index 999999999 \
-	--no-full-data \
-	--epochs 1001 \
-	--lr 0.03 \
-	--no-weighting \
-	--batching \
-	--validation \
-	--num-blocks 1000
+echo "Running CPU job"
+echo "Host: $(hostname)"
+echo "Working directory: $(pwd)"
+echo "Python: $(which python)"
+echo "Threads: $LSB_DJOB_NUMPROC"
+
+python -c "import torch; print('Torch:', torch.__version__); print('CUDA available:', torch.cuda.is_available())"
+
+python src/path_to_your_script.py
