@@ -17,15 +17,11 @@ classifiers = [
 ]
 readme = "README.md"
 requires-python = ">=3.12"
+
+# Shared dependencies used by both CPU and GPU environments.
 dependencies = [
     "numpy==1.26.4",
     "scikit-learn>=1.8.0",
-    # Intel/any macOS: last supported macOS x86 build line
-    "torch==2.2.2; platform_system == 'Darwin'",
-    "torchvision==0.17.2; platform_system == 'Darwin'",
-    # Linux: explicitly pin cu128 wheels
-    "torch==2.7.1+cu128; platform_system == 'Linux'",
-    "torchvision==0.22.1+cu128; platform_system == 'Linux'",
     "tqdm==4.67.1",
     "scanpy>=1.9.0",
     "umap-learn>=0.5.7",
@@ -35,13 +31,44 @@ dependencies = [
     "igraph>=1.0.0",
 ]
 
+# PyTorch is split into optional extras so CPU and GPU environments
+# can use the same project but install different torch builds.
+[project.optional-dependencies]
+cpu = [
+    "torch==2.7.1",
+    "torchvision==0.22.1",
+]
+
+gpu = [
+    "torch==2.7.1+cu128",
+    "torchvision==0.22.1+cu128",
+]
+
+# Prevent installing both CPU and GPU extras at the same time.
+[tool.uv]
+conflicts = [
+  [
+    { extra = "cpu" },
+    { extra = "gpu" },
+  ],
+]
+
+# Tell uv where to get torch/torchvision depending on selected extra.
 [tool.uv.sources]
 torch = [
-  { index = "pytorch-cu128", marker = "platform_system == 'Linux'" },
+  { index = "pytorch-cpu", extra = "cpu" },
+  { index = "pytorch-cu128", extra = "gpu" },
 ]
+
 torchvision = [
-  { index = "pytorch-cu128", marker = "platform_system == 'Linux'" },
+  { index = "pytorch-cpu", extra = "cpu" },
+  { index = "pytorch-cu128", extra = "gpu" },
 ]
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
 
 [[tool.uv.index]]
 name = "pytorch-cu128"
