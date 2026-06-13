@@ -8,7 +8,7 @@ import scipy.sparse as sp
 parent_dir = Path(__file__).resolve().parents[1]
 sys.path.append(str(parent_dir))
 
-from dna_modelling.data import Data
+from dna_modelling.utils import Data
 
 torch.set_num_threads(4)
 torch.set_num_interop_threads(1)

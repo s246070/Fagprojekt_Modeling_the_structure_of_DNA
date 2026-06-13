@@ -9,7 +9,7 @@ model = torch.load("models/ldm_ls2_weighting_False_run100.pth")
 
 data = model['embed_cells'].cpu().detach().numpy()
 
-neigh = KNeighborsClassifier(n_neighbors=1, metric='euclidean')
+neigh = KNeighborsClassifier(n_neighbors=2, metric='euclidean')
 neigh.fit(data, cell_types)
 pred = neigh.predict(data)
 

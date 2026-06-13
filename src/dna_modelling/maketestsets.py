@@ -1,5 +1,5 @@
 import torch
-from dna_modelling.data import Data
+from dna_modelling.utils import Data
 from dna_modelling.evaluate import make_test_set
 from datetime import datetime
 import numpy as np

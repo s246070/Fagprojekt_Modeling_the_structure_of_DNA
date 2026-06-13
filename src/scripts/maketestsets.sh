@@ -6,7 +6,7 @@
 #BSUB -n 4
 #BSUB -R "rusage[mem=125GB]"
 #BSUB -R "span[hosts=1]"
-#BSUB -W 72:00
+#BSUB -W 45:00
 # end of BSUB options
 
 cd "$LS_SUBCWD" || exit 1
