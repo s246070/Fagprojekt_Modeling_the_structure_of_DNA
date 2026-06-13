@@ -4,9 +4,9 @@
 #BSUB -e outfiles/batch_Script_2%J.err
 #BSUB -q hpc
 #BSUB -n 4
-#BSUB -R "rusage[mem=40GB]"
+#BSUB -R "rusage[mem=50GB]"
 #BSUB -R "span[hosts=1]"
-#BSUB -W 72:00
+#BSUB -W 26:00
 # end of BSUB options
 
 cd "$LS_SUBCWD" || exit 1
@@ -23,7 +23,13 @@ export NUMEXPR_NUM_THREADS=$LSB_DJOB_NUMPROC
 export MKL_DYNAMIC=false
 export OMP_DYNAMIC=false
 
-export LS_DIM=2
-export INDEX=4000
-export WEIGHTING=false
-python src/dna_modelling/main_2.py
+python src/dna_modelling/main_2.py \
+	--seed 1 \
+	--ls-dim 16 \
+	--index 1616 \
+	--no-weighting \
+	--epochs 1001 \
+	--lr 0.005 \
+	--batching \
+	--validation \
+	--num-blocks 100
