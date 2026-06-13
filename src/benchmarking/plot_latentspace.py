@@ -13,7 +13,7 @@ with open("src/benchmarking/cell_types.txt", "r") as f:
 labels = np.array(cell_types)
 unique_labels = np.unique(labels)
 
-color_map = plt.cm.get_cmap("tab10", len(unique_labels))
+color_map = plt.colormaps.get_cmap("tab10").resampled(len(unique_labels))
 label_to_color = {label: color_map(i) for i, label in enumerate(unique_labels)}
 
 colors = [label_to_color[label] for label in labels]
