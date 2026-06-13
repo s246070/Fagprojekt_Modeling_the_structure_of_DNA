@@ -86,7 +86,7 @@ def main():
     print(f"PR AUC: {pr_auc:.4f}", flush=True)
 
     # Train
-    losses = TrainModel(
+    TrainModel(
         model,
         device=device,
         plots=False,

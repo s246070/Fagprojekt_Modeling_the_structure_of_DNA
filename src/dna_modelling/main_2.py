@@ -61,7 +61,7 @@ def main():
     )
 
     # Train
-    losses = TrainModel(
+    TrainModel(
         model,
         device=device,
         plots=False,

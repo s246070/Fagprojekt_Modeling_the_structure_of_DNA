@@ -4,7 +4,7 @@
 
 import numpy as np
 import scipy.sparse as sp
-# import igraph as ig
+import igraph as ig
 # from scipy.sparse import csr_matrix
 import matplotlib.pyplot as plt
 from pathlib import Path
