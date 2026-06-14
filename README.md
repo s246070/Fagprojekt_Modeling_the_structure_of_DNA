@@ -1,7 +1,11 @@
 ````markdown
 # dna_modelling
 
-A short description of the project.
+This project investigates the use of Latent Distance Models (LDMs) for modeling sparse single-cell ATAC-seq data. The data is represented as a bipartite graph between cells and chromatin features, where accessible regions are modeled as interactions between cells and peaks.
+
+The goal of the project is to learn low-dimensional latent representations of cells and features, where distances in the latent space reflect the probability of chromatin accessibility. The model is evaluated using held-out accessibility links and compared with dimensionality-reduction approaches such as PCA and PeakVI.
+
+The project focuses on predictive performance, biological interpretability of the learned latent space, and the effect of batching on scalability and model quality
 
 ## Project structure
 
