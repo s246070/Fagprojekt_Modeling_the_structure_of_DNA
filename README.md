@@ -17,6 +17,7 @@ The directory structure of the project looks like this:
 │   └── small_dataset
 ├── models/                     # Trained models
 ├── notebooks/                  # Jupyter notebooks
+│   └── stat.ipynb              # Statistical evaluations
 ├── outfiles/                   # lsf outfiles
 ├── plots/
 ├── results/                    # Model performance results
