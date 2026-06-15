@@ -81,6 +81,19 @@ def main() -> None:
     print("Loaded AnnData:", flush=True)
     print(adata_cp, flush=True)
 
+    print("Checking AnnData index uniqueness...", flush=True)
+
+    if not adata_cp.obs_names.is_unique:
+        print("Warning: obs_names are not unique. Making cell names unique...", flush=True)
+        adata_cp.obs_names_make_unique()
+
+    if not adata_cp.var_names.is_unique:
+        print("Warning: var_names are not unique. Making peak names unique...", flush=True)
+        adata_cp.var_names_make_unique()
+
+    print(f"obs_names unique: {adata_cp.obs_names.is_unique}", flush=True)
+    print(f"var_names unique: {adata_cp.var_names.is_unique}", flush=True)
+        
     # SIMBA scATAC tutorial uses an AnnData object called adata_CP:
     # rows = cells, columns = peaks.
     binarize_anndata(adata_cp)
