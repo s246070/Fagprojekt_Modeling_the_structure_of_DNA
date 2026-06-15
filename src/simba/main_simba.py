@@ -1,6 +1,8 @@
 import argparse
 import random
 from pathlib import Path
+import contextlib
+import sys
 
 import numpy as np
 import simba as si
@@ -29,7 +31,18 @@ def parse_args():
         action="store_true",
         help="Skip PCA-based peak selection and use all peaks after filtering.",
     )
-
+    parser.add_argument(
+        "--specify-path",
+        type=str,
+        default=None,
+        help="Specify a custom path to an AnnData file for SIMBA input (overrides --full).",
+    )
+    parser.add_argument(
+        "--workdir",
+        type=str,
+        default=None,
+        help="Optional scratch/work directory for SIMBA/PBG intermediate files.",
+    )
     return parser.parse_args()
 
 
@@ -39,9 +52,17 @@ def set_seed(seed: int) -> None:
     np.random.seed(seed)
 
 
-def make_dirs(run_name: str) -> tuple[Path, Path]:
-    """Create model and result directories."""
-    model_dir = Path("models") / "simba" / run_name
+def make_dirs(run_name: str, workdir: str | None = None) -> tuple[Path, Path]:
+    """Create SIMBA work/model directory and result directory."""
+
+    if workdir is None:
+        # Default: store SIMBA/PBG files in the project folder
+        model_dir = Path("models") / "simba" / run_name
+    else:
+        # HPC mode: store SIMBA/PBG files on /work3 or another scratch location
+        model_dir = Path(workdir) / run_name
+
+    # Final useful outputs are still saved in the project folder
     result_dir = Path("results") / "simba" / run_name
 
     model_dir.mkdir(parents=True, exist_ok=True)
@@ -63,7 +84,7 @@ def main() -> None:
     args = parse_args()
     set_seed(args.seed)
 
-    model_dir, result_dir = make_dirs(args.run_name)
+    model_dir, result_dir = make_dirs(args.run_name, args.workdir)
 
     print(f"Starting SIMBA run: {args.run_name}", flush=True)
     print(f"SIMBA version: {si.__version__}", flush=True)
@@ -76,7 +97,9 @@ def main() -> None:
     data_loader = Data()
 
     # Important: backed=False because SIMBA preprocessing modifies the AnnData object.
-    adata_cp = data_loader.load_data(backed=False, full=args.full)
+    adata_cp = data_loader.load_data(backed=False, full=args.full, specify_path=args.specify_path)
+
+    print(f"loaded data from path: {args.specify_path if args.specify_path else ('full dataset' if args.full else 'default dataset')}", flush=True)
 
     print("Loaded AnnData:", flush=True)
     print(adata_cp, flush=True)
@@ -138,12 +161,16 @@ def main() -> None:
     pbg_params["num_epochs"] = args.num_epochs
 
     print("Training SIMBA/PBG model...", flush=True)
-    si.tl.pbg_train(
-        pbg_params=pbg_params,
-        auto_wd=True,
-        save_wd=True,
-        output="model",
-    )
+    pbg_log_path = result_dir / "pbg_train.log"
+
+    with open(pbg_log_path, "w") as log_file:
+        with contextlib.redirect_stdout(log_file):
+            si.tl.pbg_train(
+                pbg_params=pbg_params,
+                auto_wd=True,
+                save_wd=True,
+                output="model",
+            )
 
     print("Reading embeddings...", flush=True)
     dict_adata = si.read_embedding(num_epochs=args.num_epochs)
