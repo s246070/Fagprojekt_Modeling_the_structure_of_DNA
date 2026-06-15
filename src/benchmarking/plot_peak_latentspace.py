@@ -2,10 +2,9 @@ import torch
 import matplotlib.pyplot as plt
 import numpy as np
 
-name = "ldm_ls2_weighting_False_run4000"
+name = "peakvi_latent_2d"
 
-model = torch.load(f"models/{name}.pth")
-data = model['embed_cells'].cpu().detach().numpy()
+data = torch.load(f"models/{name}.pth")
 
 with open("src/benchmarking/cell_types.txt", "r") as f:
     cell_types = [line.strip() for line in f]
