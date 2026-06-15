@@ -7,7 +7,7 @@ with open("src/benchmarking/cell_types.txt", "r") as f:
 
 data = torch.load("models/peakvi_latent_2d.pth")
 
-neigh = KNeighborsClassifier(n_neighbors=2, metric='euclidean')
+neigh = KNeighborsClassifier(n_neighbors=5, metric='euclidean')
 neigh.fit(data, cell_types)
 pred = neigh.predict(data)
 
