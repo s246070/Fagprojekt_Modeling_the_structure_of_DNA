@@ -16,12 +16,12 @@ classifiers = [
   "Programming Language :: Python :: 3",
 ]
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = ">=3.10,<3.13"
 
 # Shared dependencies used by both CPU and GPU environments.
 dependencies = [
     "numpy==1.26.4",
-    "scikit-learn>=1.8.0",
+    "scikit-learn>=1.4,<1.8",
     "tqdm==4.67.1",
     "scanpy>=1.9.0",
     "umap-learn>=0.5.7",
@@ -42,6 +42,12 @@ cpu = [
 gpu = [
     "torch==2.7.1+cu128",
     "torchvision==0.22.1+cu128",
+]
+
+simba = [
+    "simba @ git+https://github.com/pinellolab/simba@dev",
+    "pybedtools>=0.9",
+    "scikit-misc>=0.3",
 ]
 
 # Prevent installing both CPU and GPU extras at the same time.
