@@ -37,12 +37,17 @@ class Data():
     If the 'backed' parameter is set to True, it loads the data into the hard drive.
     If 'backed' is False, it loads the entire dataset into memory.
     """
-    def load_data(self, backed=True, full=False):
-        self.ensure_data_downloaded(path=self.data_path_full if full else self.data_path)
+    def load_data(self, backed=True, full=False, specify_path=None):
+        if specify_path is not None:
+            data_path = self.data_directory / specify_path
+        else:
+            data_path = self.data_path_full if full else self.data_path
+
+            self.ensure_data_downloaded(path=data_path)
 
         if backed:
-            return sc.read_h5ad(self.data_path, backed="r") if not full else sc.read_h5ad(self.data_path_full, backed="r")
-        return sc.read_h5ad(self.data_path) if not full else sc.read_h5ad(self.data_path_full)
+            return sc.read_h5ad(data_path, backed="r") if not full else sc.read_h5ad(self.data_path_full, backed="r")
+        return sc.read_h5ad(data_path) if not full else sc.read_h5ad(self.data_path_full)
     
     def load_test_set(self, path, device):
         adata = sc.read_h5ad(path)

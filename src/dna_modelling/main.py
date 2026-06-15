@@ -40,6 +40,12 @@ def parse_args():
         default=True,
         help="Run validation during training checkpoints.",
     )
+    parser.add_argument(
+        "--data-path",
+        type=str,
+        default=None,
+        help="Specify a custom path to the AnnData file. Overrides --full-data.",
+    )
     return parser.parse_args()
 
 
@@ -52,7 +58,7 @@ def main():
 
     # Load AnnData
     data_loader = Data()
-    adata = data_loader.load_data(backed=True, full=args.full_data)
+    adata = data_loader.load_data(backed=True, full=args.full_data, specify_path=args.data_path)
 
     print(f"data added{datetime.now()}", flush=True)
 
