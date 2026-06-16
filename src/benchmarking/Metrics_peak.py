@@ -7,16 +7,17 @@ with open("src/benchmarking/cell_types.txt", "r") as f:
 
 data = torch.load("models/peakvi_latent_2d.pth")
 
-nbrs = NearestNeighbors(n_neighbors=6, metric='euclidean').fit(data)
-distances, indices = nbrs.kneighbors(data)
+for i in [15, 30, 50]:
+    nbrs = NearestNeighbors(n_neighbors=i, metric='euclidean').fit(data)
+    distances, indices = nbrs.kneighbors(data)
 
-# skip first neighbor (itself)
-indices = indices[:, 1:]
+    # skip first neighbor (itself)
+    indices = indices[:, 1:]
 
-preds = []
-for i, neighbors in enumerate(indices):
-    neighbor_labels = [cell_types[j] for j in neighbors]
-    pred = max(set(neighbor_labels), key=neighbor_labels.count)
-    preds.append(pred)
+    preds = []
+    for i, neighbors in enumerate(indices):
+        neighbor_labels = [cell_types[j] for j in neighbors]
+        pred = max(set(neighbor_labels), key=neighbor_labels.count)
+        preds.append(pred)
 
-print(f"LOO-style accuracy: {accuracy_score(cell_types, preds)}, NMI: {normalized_mutual_info_score(cell_types, preds)}, ARI: {adjusted_rand_score(cell_types, preds)}")
+    print(f"LOO-style accuracy: {accuracy_score(cell_types, preds)}, NMI: {normalized_mutual_info_score(cell_types, preds)}, ARI: {adjusted_rand_score(cell_types, preds)}")
