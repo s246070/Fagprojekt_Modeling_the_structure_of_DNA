@@ -8,8 +8,8 @@ LS_DIMS=(2 3 8 16 32)
 SEED=1
 INDEX=1
 EPOCHS=1001
-LR=0.03
-NUM_BLOCKS=1000
+LR=0.05
+NUM_BLOCKS=100
 DATA_PATH="train_sets/adata_subset_10k_1.h5ad"
 
 echo "Submitting LSF jobs..."
@@ -38,7 +38,7 @@ python src/dna_modelling/main.py \
   --epochs $EPOCHS \
   --lr $LR \
   --no-weighting \
-  --batching \
+  --no-batching \
   --validation \
   --num-blocks $NUM_BLOCKS \
   --data-path $DATA_PATH
@@ -53,7 +53,7 @@ EOF
     -n 4 \
     -R "rusage[mem=50GB]" \
     -R "span[hosts=1]" \
-    -W 08:00 \
+    -W 24:00 \
     bash -lc "$job_cmd"
 done
 

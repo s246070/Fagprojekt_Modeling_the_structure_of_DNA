@@ -4,9 +4,9 @@
 #BSUB -e outfiles/TEST_Script_2%J.err
 #BSUB -q hpc
 #BSUB -n 4
-#BSUB -R "rusage[mem=30GB]"
+#BSUB -R "rusage[mem=175GB]"
 #BSUB -R "span[hosts=1]"
-#BSUB -W 24:00
+#BSUB -W 17:00
 # end of BSUB options
 
 cd "$LS_SUBCWD" || exit 1
@@ -25,12 +25,12 @@ export OMP_DYNAMIC=false
 
 python src/dna_modelling/main.py \
 	--seed 1 \
-	--ls-dim 16 \
-	--index 999999999 \
-	--no-full-data \
+	--ls-dim 3 \
+	--index 3333 \
+	--full-data \
 	--epochs 1001 \
 	--lr 0.03 \
 	--no-weighting \
-	--batching \
+	--no-batching \
 	--validation \
 	--num-blocks 1000
