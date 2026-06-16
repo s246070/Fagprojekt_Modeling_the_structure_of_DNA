@@ -2,10 +2,10 @@ import torch
 from sklearn.neighbors import KNeighborsClassifier, NearestNeighbors
 from sklearn.metrics import accuracy_score, normalized_mutual_info_score, adjusted_rand_score
 
-with open("src/benchmarking/cell_types.txt", "r") as f:
+with open("src/benchmarking/cell_types_subset_1.txt", "r") as f:
     cell_types = [line.strip() for line in f]
 
-model = torch.load("models/ldm_ls2_weighting_False_run4000.pth")
+model = torch.load("models/ldm_ls2_epoch1000_blocks100_index1.pth")
 
 data = model['embed_cells'].cpu().detach().numpy()
 
