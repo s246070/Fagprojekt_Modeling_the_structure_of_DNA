@@ -8,7 +8,7 @@ LS_DIMS=(2 3 8 16 32)
 SEED=1
 INDEX=1
 EPOCHS=1001
-LR=0.05
+LR=0.005
 NUM_BLOCKS=100
 DATA_PATH="train_sets/adata_subset_10k_1.h5ad"
 
@@ -53,7 +53,7 @@ EOF
     -n 4 \
     -R "rusage[mem=50GB]" \
     -R "span[hosts=1]" \
-    -W 24:00 \
+    -W 48:00 \
     bash -lc "$job_cmd"
 done
 

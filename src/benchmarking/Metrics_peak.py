@@ -1,5 +1,5 @@
 import torch
-from sklearn.neighbors import KNeighborsClassifier
+from sklearn.neighbors import KNeighborsClassifier, NearestNeighbors
 from sklearn.metrics import accuracy_score, normalized_mutual_info_score, adjusted_rand_score
 
 with open("src/benchmarking/cell_types.txt", "r") as f:
@@ -7,8 +7,17 @@ with open("src/benchmarking/cell_types.txt", "r") as f:
 
 data = torch.load("models/peakvi_latent_2d.pth")
 
-neigh = KNeighborsClassifier(n_neighbors=5, metric='euclidean')
-neigh.fit(data, cell_types)
-pred = neigh.predict(data)
+for i in [15, 30, 50]:
+    nbrs = NearestNeighbors(n_neighbors=i, metric='euclidean').fit(data)
+    distances, indices = nbrs.kneighbors(data)
 
-print(f"Accuracy: {accuracy_score(cell_types, pred)}, NMI: {normalized_mutual_info_score(cell_types, pred)}, ARI: {adjusted_rand_score(cell_types, pred)}")
+    # skip first neighbor (itself)
+    indices = indices[:, 1:]
+
+    preds = []
+    for i, neighbors in enumerate(indices):
+        neighbor_labels = [cell_types[j] for j in neighbors]
+        pred = max(set(neighbor_labels), key=neighbor_labels.count)
+        preds.append(pred)
+
+    print(f"LOO-style accuracy: {accuracy_score(cell_types, preds)}, NMI: {normalized_mutual_info_score(cell_types, preds)}, ARI: {adjusted_rand_score(cell_types, preds)}")
