@@ -10,7 +10,7 @@ model = torch.load("models/ldm_ls2_weighting_False_run4000.pth")
 data = model['embed_cells'].cpu().detach().numpy()
 
 for i in [15, 30, 50]:
-    nbrs = NearestNeighbors(n_neighbors=i, metric='euclidean').fit(data)
+    nbrs = NearestNeighbors(n_neighbors=i + 1, metric='euclidean').fit(data)
     distances, indices = nbrs.kneighbors(data)
 
     # skip first neighbor (itself)
