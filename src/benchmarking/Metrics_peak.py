@@ -15,7 +15,7 @@ for i in [15, 30, 50]:
     indices = indices[:, 1:]
 
     preds = []
-    for i, neighbors in enumerate(indices):
+    for _, neighbors in enumerate(indices):
         neighbor_labels = [cell_types[j] for j in neighbors]
         pred = max(set(neighbor_labels), key=neighbor_labels.count)
         preds.append(pred)
