@@ -1,10 +1,10 @@
 #!/bin/bash
-#BSUB -J Peak_Script_2
-#BSUB -o outfiles/Peak_Script_2%J.out
-#BSUB -e outfiles/Peak_Script_2%J.err
+#BSUB -J CPU_Job
+#BSUB -o outfiles/CPU_Job_%J.out
+#BSUB -e outfiles/CPU_Job_%J.err
 #BSUB -q hpc
 #BSUB -n 4
-#BSUB -R "rusage[mem=60GB]"
+#BSUB -R "rusage[mem=50GB]"
 #BSUB -R "span[hosts=1]"
 #BSUB -W 48:00
 # end of BSUB options
