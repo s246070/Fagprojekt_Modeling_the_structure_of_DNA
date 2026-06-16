@@ -21,7 +21,6 @@ data_loader = Data()
 adata = data_loader.load_data(backed=True, full=False, specify_path="train_sets/adata_subset_10k_1.h5ad")
 
 cell_types = adata.obs
-print(cell_types.shape)
 
 with open("src/benchmarking/cell_types_subset_1.txt", "w") as f:
     for i in range(len(cell_types)):
