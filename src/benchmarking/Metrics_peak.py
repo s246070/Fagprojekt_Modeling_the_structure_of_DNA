@@ -8,7 +8,7 @@ with open("src/benchmarking/cell_types.txt", "r") as f:
 data = torch.load("models/peakvi_latent_2d.pth")
 
 for i in [15, 30, 50]:
-    nbrs = NearestNeighbors(n_neighbors=i, metric='euclidean').fit(data)
+    nbrs = NearestNeighbors(n_neighbors=i + 1, metric='euclidean').fit(data)
     distances, indices = nbrs.kneighbors(data)
 
     # skip first neighbor (itself)
