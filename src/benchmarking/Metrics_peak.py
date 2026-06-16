@@ -5,7 +5,7 @@ from sklearn.metrics import accuracy_score, normalized_mutual_info_score, adjust
 with open("src/benchmarking/cell_types.txt", "r") as f:
     cell_types = [line.strip() for line in f]
 
-data = torch.load("models/peakvi_latent_2d.pth")
+data = torch.load("models/peakvi_latent_2d_subset_10k.pth")
 
 for i in [15, 30, 50]:
     nbrs = NearestNeighbors(n_neighbors=i + 1, metric='euclidean').fit(data)

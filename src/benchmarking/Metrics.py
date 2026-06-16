@@ -5,7 +5,7 @@ from sklearn.metrics import accuracy_score, normalized_mutual_info_score, adjust
 with open("src/benchmarking/cell_types_subset_1.txt", "r") as f:
     cell_types = [line.strip() for line in f]
 
-model = torch.load("models/ldm_ls2_epoch1000_blocks100_index1.pth")
+model = torch.load("models/ldm_ls32_epoch1000_blocks100_index1.pth")
 
 data = model['embed_cells'].cpu().detach().numpy()
 

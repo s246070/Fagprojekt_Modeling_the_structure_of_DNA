@@ -5,7 +5,7 @@
 #BSUB -q gpuv100
 #BSUB -gpu "num=1"
 #BSUB -n 4
-#BSUB -R "rusage[mem=5.5GB]"
+#BSUB -R "rusage[mem=2GB]"
 #BSUB -R "span[hosts=1]"
 #BSUB -W 24:00
 # end of BSUB options
