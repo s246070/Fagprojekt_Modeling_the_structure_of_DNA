@@ -2,15 +2,22 @@ import torch
 import matplotlib.pyplot as plt
 import numpy as np
 
-name = "peakvi_latent_2d_subset_10k" 
+name = "ldm_ls2_epoch1000_blocks100_index1"
 
-data = torch.load(f"models/{name}.pth")
+model = torch.load(f"models/{name}.pth")
+data = model['embed_cells'].cpu().detach().numpy()
+data_2 = model['embed_features'].cpu().detach().numpy()
+
+data = np.concatenate((data_2, data), axis=0)
 
 with open("src/benchmarking/cell_types_subset_1.txt", "r") as f:
     cell_types = [line.strip() for line in f]
 
 labels = np.array(cell_types)
 unique_labels = np.unique(labels)
+
+unique_labels = np.append(unique_labels, "Features") 
+labels = np.append(["Features"] * data_2.shape[0], labels)
 
 color_map = plt.colormaps.get_cmap("tab20").resampled(len(unique_labels))
 label_to_color = {label: color_map(i) for i, label in enumerate(unique_labels)}
@@ -26,5 +33,5 @@ handles = [
 plt.legend(handles=handles, title="Cell Types", bbox_to_anchor=(1.05, 1), loc='upper left')
 
 plt.tight_layout()
-plt.savefig(f"plots/{name}.png", dpi=300)
+plt.savefig(f"plots/full_{name}.png", dpi=300)
 plt.show()

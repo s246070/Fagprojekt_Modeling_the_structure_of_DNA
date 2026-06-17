@@ -2,23 +2,24 @@ import torch
 from sklearn.neighbors import KNeighborsClassifier, NearestNeighbors
 from sklearn.metrics import accuracy_score, normalized_mutual_info_score, adjusted_rand_score
 
-with open("src/benchmarking/cell_types.txt", "r") as f:
+with open("src/benchmarking/cell_types_subset_1.txt", "r") as f:
     cell_types = [line.strip() for line in f]
 
-model = torch.load("models/ldm_ls2_weighting_False_run4000.pth")
+model = torch.load("models/ldm_ls32_epoch1000_blocks100_index1.pth")
 
 data = model['embed_cells'].cpu().detach().numpy()
 
-nbrs = NearestNeighbors(n_neighbors=6, metric='euclidean').fit(data)
-distances, indices = nbrs.kneighbors(data)
+for i in [15, 30, 50]:
+    nbrs = NearestNeighbors(n_neighbors=i + 1, metric='euclidean').fit(data)
+    distances, indices = nbrs.kneighbors(data)
 
-# skip first neighbor (itself)
-indices = indices[:, 1:]
+    # skip first neighbor (itself)
+    indices = indices[:, 1:]
 
-preds = []
-for i, neighbors in enumerate(indices):
-    neighbor_labels = [cell_types[j] for j in neighbors]
-    pred = max(set(neighbor_labels), key=neighbor_labels.count)
-    preds.append(pred)
+    preds = []
+    for _, neighbors in enumerate(indices):
+        neighbor_labels = [cell_types[j] for j in neighbors]
+        pred = max(set(neighbor_labels), key=neighbor_labels.count)
+        preds.append(pred)
 
-print(f"LOO-style accuracy: {accuracy_score(cell_types, preds)}, NMI: {normalized_mutual_info_score(cell_types, preds)}, ARI: {adjusted_rand_score(cell_types, preds)}")
+    print(f"LOO-style accuracy: {accuracy_score(cell_types, preds)}, NMI: {normalized_mutual_info_score(cell_types, preds)}, ARI: {adjusted_rand_score(cell_types, preds)}")

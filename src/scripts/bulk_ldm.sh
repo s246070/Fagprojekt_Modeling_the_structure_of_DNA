@@ -38,7 +38,7 @@ python src/dna_modelling/main.py \
   --epochs $EPOCHS \
   --lr $LR \
   --no-weighting \
-  --batching \
+  --no-batching \
   --validation \
   --num-blocks $NUM_BLOCKS \
   --data-path $DATA_PATH
