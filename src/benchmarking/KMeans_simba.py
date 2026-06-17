@@ -5,7 +5,7 @@ from sklearn.metrics import accuracy_score, normalized_mutual_info_score, adjust
 with open("src/benchmarking/cell_types_subset_1.txt", "r") as f:
     cell_types = [line.strip() for line in f]
 
-adata = sc.read_h5ad("models/adata_cells_ldm32_simba.h5ad")
+adata = sc.read_h5ad("models/adata_cells_ldm2_simba.h5ad")
 
 data = adata.X
 
