@@ -2,17 +2,17 @@ import torch
 import matplotlib.pyplot as plt
 import numpy as np
 
-name = "peakvi_latent_2d" 
+name = "peakvi_latent_2d_subset_10k" 
 
 data = torch.load(f"models/{name}.pth")
 
-with open("src/benchmarking/cell_types.txt", "r") as f:
+with open("src/benchmarking/cell_types_subset_1.txt", "r") as f:
     cell_types = [line.strip() for line in f]
 
 labels = np.array(cell_types)
 unique_labels = np.unique(labels)
 
-color_map = plt.colormaps.get_cmap("tab10").resampled(len(unique_labels))
+color_map = plt.colormaps.get_cmap("tab20").resampled(len(unique_labels))
 label_to_color = {label: color_map(i) for i, label in enumerate(unique_labels)}
 
 colors = [label_to_color[label] for label in labels]
