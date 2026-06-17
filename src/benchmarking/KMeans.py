@@ -10,7 +10,7 @@ model = torch.load("models/ldm_ls2_epoch1000_blocks100_index1.pth")
 
 data = model['embed_cells'].cpu().detach().numpy()
 
-for i in [11, 20, 30]:
+for i in [11, 30, 50]:
     avg_accuracy = []
     nmi_scores = []
     ari_scores = []
@@ -31,7 +31,7 @@ for i in [11, 20, 30]:
         mapped_preds = [cluster_to_true_label[label] for label in preds]
 
         avg_accuracy.append(accuracy_score(cell_types, mapped_preds))
-        nmi_scores.append(normalized_mutual_info_score(cell_types, mapped_preds))
-        ari_scores.append(adjusted_rand_score(cell_types, mapped_preds))
+        nmi_scores.append(normalized_mutual_info_score(cell_types, preds))
+        ari_scores.append(adjusted_rand_score(cell_types, preds))
 
     print(f"KMeans (n_clusters={i}): Accuracy: {np.mean(avg_accuracy)} - Std: {np.std(avg_accuracy)}, NMI: {np.mean(nmi_scores)} - Std: {np.std(nmi_scores)}, ARI: {np.mean(ari_scores)} - Std: {np.std(ari_scores)}")
