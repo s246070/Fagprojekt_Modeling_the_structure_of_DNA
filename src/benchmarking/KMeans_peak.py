@@ -8,7 +8,7 @@ with open("src/benchmarking/cell_types.txt", "r") as f:
 
 data = torch.load("models/peakvi_latent_2d.pth")
 
-for i in [11, 20, 30]:
+for i in [11, 30, 50]:
     avg_accuracy = []
     nmi_scores = []
     ari_scores = []
@@ -19,9 +19,9 @@ for i in [11, 20, 30]:
         # Match predicted cluster labels to true labels
         cluster_to_true_label = {}
         for cluster in range(i):
-            cluster_indices = [j for j, label in enumerate(preds) if label == cluster]
+            cluster_indices = [k for k, label in enumerate(preds) if label == cluster]
             if cluster_indices:
-                true_labels_in_cluster = [cell_types[j] for j in cluster_indices]
+                true_labels_in_cluster = [cell_types[k] for k in cluster_indices]
                 most_common_label = max(set(true_labels_in_cluster), key=true_labels_in_cluster.count)
                 cluster_to_true_label[cluster] = most_common_label
 
