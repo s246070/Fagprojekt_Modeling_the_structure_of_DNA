@@ -167,6 +167,10 @@ def plot_pca_3d():
     ax.yaxis.pane.set_alpha(0.0)
     ax.zaxis.pane.set_alpha(0.0)
 
+    ax.set_xlim(-60, 50)
+    ax.set_ylim(-80, 50)
+    ax.set_zlim(-60, 60)
+
     remove_axis_numbers(ax, is_3d=True)
 
     ax.view_init(elev=20, azim=130)
