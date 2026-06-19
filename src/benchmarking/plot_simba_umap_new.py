@@ -3,7 +3,7 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 import numpy as np
-import torch
+import scanpy as sc
 import umap
 
 from mpl_toolkits.mplot3d import Axes3D  # needed for 3D plotting
@@ -12,54 +12,44 @@ from mpl_toolkits.mplot3d import Axes3D  # needed for 3D plotting
 # -----------------------------
 # Settings
 # -----------------------------
-name = "peakvi_latent_16d"
-model_path = f"models/peakvi_latent_16d_subset_10k.pth"
-
-# Use the same subset labels as your 10,000-cell latent file
-cell_type_path = "src/benchmarking/cell_types_subset_1.txt"
+name = "simba_subset_dim16"
+adata_path = "models/adata_cells_ldm16_simba.h5ad"
 
 save_dir = Path("plots")
 save_dir.mkdir(parents=True, exist_ok=True)
 
 
 # -----------------------------
-# Load PeakVI latent embeddings
+# Load SIMBA cell embeddings
 # -----------------------------
-data = torch.load(model_path, map_location="cpu")
+adata = sc.read_h5ad(adata_path)
 
-latent = data.detach().cpu().numpy() if hasattr(data, "detach") else np.asarray(data)
+latent = adata.X
+if hasattr(latent, "toarray"):
+    latent = latent.toarray()
 
-if latent.ndim == 1:
-    latent = latent[:, None]
-elif latent.ndim > 2:
-    latent = latent.reshape(latent.shape[0], -1)
+latent = np.asarray(latent)
+
+labels = adata.obs["cell_type"].to_numpy()
+unique_labels = np.unique(labels)
+
+assert len(labels) == latent.shape[0], (
+    f"Number of labels ({len(labels)}) does not match "
+    f"number of latent embeddings ({latent.shape[0]})"
+)
 
 print(f"Loaded {latent.shape[0]} cells")
 print(f"Latent dimension: {latent.shape[1]}")
 
 
 # -----------------------------
-# Load cell types
-# -----------------------------
-with open(cell_type_path, "r") as f:
-    cell_types = np.array([line.strip() for line in f])
-
-assert len(cell_types) == latent.shape[0], (
-    f"Number of labels ({len(cell_types)}) does not match "
-    f"number of latent embeddings ({latent.shape[0]})"
-)
-
-unique_cell_types = np.unique(cell_types)
-
-
-# -----------------------------
 # Colors
 # -----------------------------
-cmap = plt.colormaps.get_cmap("tab20").resampled(len(unique_cell_types))
+cmap = plt.colormaps.get_cmap("tab20").resampled(len(unique_labels))
 
 label_to_color = {
     label: cmap(i)
-    for i, label in enumerate(unique_cell_types)
+    for i, label in enumerate(unique_labels)
 }
 
 
@@ -85,11 +75,16 @@ def make_legend_handles():
             markersize=6,
             label=label,
         )
-        for label in unique_cell_types
+        for label in unique_labels
     ]
 
 
-def compute_umap(n_components, n_neighbors=15, min_dist=0.1, metric="euclidean"):
+def compute_umap(
+    n_components,
+    n_neighbors=15,
+    min_dist=0.1,
+    metric="euclidean",
+):
     reducer = umap.UMAP(
         n_neighbors=n_neighbors,
         min_dist=min_dist,
@@ -104,7 +99,11 @@ def compute_umap(n_components, n_neighbors=15, min_dist=0.1, metric="euclidean")
 # -----------------------------
 # 2D UMAP plot
 # -----------------------------
-def plot_umap_2d(n_neighbors=15, min_dist=0.1, metric="euclidean"):
+def plot_umap_2d(
+    n_neighbors=15,
+    min_dist=0.1,
+    metric="euclidean",
+):
     embedding = compute_umap(
         n_components=2,
         n_neighbors=n_neighbors,
@@ -114,8 +113,8 @@ def plot_umap_2d(n_neighbors=15, min_dist=0.1, metric="euclidean"):
 
     fig, ax = plt.subplots(figsize=(9, 7))
 
-    for label in unique_cell_types:
-        mask = cell_types == label
+    for label in unique_labels:
+        mask = labels == label
 
         ax.scatter(
             embedding[mask, 0],
@@ -152,7 +151,11 @@ def plot_umap_2d(n_neighbors=15, min_dist=0.1, metric="euclidean"):
 # -----------------------------
 # 3D UMAP plot
 # -----------------------------
-def plot_umap_3d(n_neighbors=15, min_dist=0.1, metric="euclidean"):
+def plot_umap_3d(
+    n_neighbors=15,
+    min_dist=0.1,
+    metric="euclidean",
+):
     embedding = compute_umap(
         n_components=3,
         n_neighbors=n_neighbors,
@@ -163,8 +166,8 @@ def plot_umap_3d(n_neighbors=15, min_dist=0.1, metric="euclidean"):
     fig = plt.figure(figsize=(10, 8))
     ax = fig.add_subplot(111, projection="3d")
 
-    for label in unique_cell_types:
-        mask = cell_types == label
+    for label in unique_labels:
+        mask = labels == label
 
         ax.scatter(
             embedding[mask, 0],
@@ -186,15 +189,11 @@ def plot_umap_3d(n_neighbors=15, min_dist=0.1, metric="euclidean"):
     ax.yaxis.pane.set_alpha(0.0)
     ax.zaxis.pane.set_alpha(0.0)
 
-    ax.set_xlim(-3.5, 3.5)
-    ax.set_ylim(-2.5, 2)
-    ax.set_zlim(-3.5, 3.5)
-
     remove_axis_numbers(ax, is_3d=True)
 
     ax.view_init(elev=20, azim=130)
 
-    # Uncomment this if you want a legend on the 3D plot
+    # Uncomment if you want legend on 3D plot
     # ax.legend(
     #     handles=make_legend_handles(),
     #     title="Cell Types",
@@ -218,7 +217,6 @@ def plot_umap_3d(n_neighbors=15, min_dist=0.1, metric="euclidean"):
 # -----------------------------
 # Run plots
 # -----------------------------
-for n_neighbors in [5, 15, 50]:
-    for min_dist in [0.1, 0.5, 0.9]:
-        # plot_umap_2d(n_neighbors=n_neighbors, min_dist=min_dist)
-        plot_umap_3d(n_neighbors=n_neighbors, min_dist=min_dist)
+
+plot_umap_2d(n_neighbors=15, min_dist=0.5)
+plot_umap_3d(n_neighbors=15, min_dist=0.5)
