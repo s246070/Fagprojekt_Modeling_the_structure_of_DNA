@@ -4,11 +4,7 @@ from sklearn.metrics import accuracy_score, normalized_mutual_info_score, adjust
 import numpy as np
 
 
-<<<<<<< HEAD
 adata = sc.read_h5ad("results/simba/simba_subset_dim{16}/adata_cells_ldm16_simba.h5ad")
-=======
-adata = sc.read_h5ad("models/adata_cells_ldm2_simba.h5ad")
->>>>>>> 774bfccb65c13dc2569a53d02f63d731d562fb85
 
 data = adata.X
 
