@@ -23,6 +23,10 @@ for i in [2, 3, 8, 16, 32]:
         f1_values[i].append(float(data[2]))
         pr_auc_values[i].append(float(data[3]))
 
+for i in loss.keys():
+    print(f"ls_dim={i}")
+    print(f"Loss: {loss[i][-1]:.4f} - AUC: {auc_values[i][-1]:.4f} - F1 Score: {f1_values[i][-1]:.4f} - PR AUC: {pr_auc_values[i][-1]:.4f}")
+
 plt.figure(figsize=(12, 8))
 for i in loss:
     plt.plot([j * 100 for j in range(1, 11)], loss[i], marker='o', label=f'ls_dim={i}')
@@ -31,7 +35,7 @@ plt.ylabel("Loss")
 plt.legend()
 plt.grid()
 plt.tight_layout()
-plt.savefig("plots/loss_vs_epochs_batching.png", dpi=300)
+plt.savefig("plots/loss_vs_epochs_{name}.png", dpi=300)
 plt.clf()
 
 
@@ -42,7 +46,7 @@ plt.ylabel("AUC Values")
 plt.legend()
 plt.grid()
 plt.tight_layout()
-plt.savefig("plots/auc_vs_epochs_batching.png", dpi=300)
+plt.savefig("plots/auc_vs_epochs_{name}.png", dpi=300)
 plt.clf()
 
 for i in f1_values:
@@ -52,7 +56,7 @@ plt.ylabel("F1 Score")
 plt.legend()
 plt.grid()
 plt.tight_layout()
-plt.savefig("plots/f1_score_vs_epochs_batching.png", dpi=300)
+plt.savefig("plots/f1_score_vs_epochs_{name}.png", dpi=300)
 plt.clf()
 
 for i in pr_auc_values:
@@ -62,5 +66,5 @@ plt.ylabel("PR AUC Values")
 plt.legend()
 plt.grid()
 plt.tight_layout()
-plt.savefig("plots/pr_auc_vs_epochs_batching.png", dpi=300)
+plt.savefig("plots/pr_auc_vs_epochs_{name}.png", dpi=300)
 plt.clf()

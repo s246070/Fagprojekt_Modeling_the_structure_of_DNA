@@ -65,7 +65,7 @@ def TrainModel(
     print(f"Starting training for {model.epochs} epochs with learning rate {model.lr} and latent space dimension {ls_dim}...", flush=True)
 
     def handle_checkpoint(epoch, current_loss):
-        if epoch % 100 != 0 or epoch <= 0:
+        if epoch % 100 != 0 and epoch < 0:
             return
 
         if validation:

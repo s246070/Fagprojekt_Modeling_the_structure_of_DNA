@@ -9,7 +9,7 @@ SEED=1
 INDEX=1
 EPOCHS=1001
 LR=0.005
-NUM_BLOCKS=100
+NUM_BLOCKS=1000
 DATA_PATH="train_sets/adata_subset_10k_1.h5ad"
 
 echo "Submitting LSF jobs..."
