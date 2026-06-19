@@ -252,6 +252,10 @@ def plot_umap_3d(
     ax.yaxis.pane.set_alpha(0.0)
     ax.zaxis.pane.set_alpha(0.0)
 
+    ax.set_xlim(-10, 10)
+    ax.set_ylim(-10, 10)
+    ax.set_zlim(-10, 10)
+
     remove_axis_numbers(ax, is_3d=True)
 
     ax.view_init(elev=20, azim=130)
