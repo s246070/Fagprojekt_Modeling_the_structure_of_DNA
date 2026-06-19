@@ -83,16 +83,16 @@ def main():
 
     print(f"created test set{datetime.now()}", flush=True)
 
-    #initialize model
+    # Initialize model
     model = LDM(
-        Aij=Aij,
+        data=Aij,
         ls_dim=args.ls_dim,
+        device=device,
+        epochs=args.epochs,
         lr=args.lr,
         weighting=args.weighting,
-        epochs=args.epochs,
         index=args.index,
         seed=args.seed,
-        device=device,
     )
 
     # load trained model
