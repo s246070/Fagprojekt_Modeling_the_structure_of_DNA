@@ -9,7 +9,7 @@ f1_values = {}
 
 for i in [2, 3, 8, 16, 32]:
     for j in range(1, 11):
-        name = f"ldm_ls{i}_epoch{j * 100}_blocks100_index1"
+        name = f"ldm_ls{i}_epoch{j * 100}_blocks10_index1"
         with open(f"results/{name}.csv", "r") as f:
             data = f.read().strip().split(",")
 
