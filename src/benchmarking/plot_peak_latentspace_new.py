@@ -12,7 +12,7 @@ import umap
 # -----------------------------
 name = "peakvi_latent_16d"
 model_path = f"models/peakvi_latent_16d_subset_10k.pth"
-cell_type_path = "src/benchmarking/cell_types.txt"
+cell_type_path = "src/benchmarking/cell_types_subset_1.txt"
 
 save_dir = Path("plots")
 save_dir.mkdir(parents=True, exist_ok=True)
