@@ -16,7 +16,7 @@ echo "Submitting LSF jobs..."
 echo "========================================"
 
 for dim in "${LS_DIMS[@]}"; do
-    job_name="Big_Data_${dim}_dim_run1"
+    job_name="subset_block10_${dim}_dim_run1"
     echo "Submitting: $job_name (LS_DIM=$dim)"
 
   job_cmd=$(cat <<EOF
@@ -38,7 +38,7 @@ python src/dna_modelling/main.py \
   --epochs $EPOCHS \
   --lr $LR \
   --no-weighting \
-  --no-batching \
+  --batching \
   --validation \
   --num-blocks $NUM_BLOCKS \
   --data-path $DATA_PATH
