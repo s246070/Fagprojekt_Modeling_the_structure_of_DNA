@@ -4,7 +4,6 @@ import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 import numpy as np
 import torch
-import umap
 
 from mpl_toolkits.mplot3d import Axes3D  # needed for 3D plotting
 
@@ -12,8 +11,8 @@ from mpl_toolkits.mplot3d import Axes3D  # needed for 3D plotting
 # -----------------------------
 # Settings
 # -----------------------------
-name = "peakvi_latent_16d"
-model_path = f"models/peakvi_latent_16d_subset_10k.pth"
+name = "peakvi_latent_3d"
+model_path = f"models/PeakVI/peakvi_latent_3d_subset_10k.pth"
 
 # Use the same subset labels as your 10,000-cell latent file
 cell_type_path = "src/benchmarking/cell_types_subset_1.txt"
@@ -88,46 +87,26 @@ def make_legend_handles():
         for label in unique_cell_types
     ]
 
-
-def compute_umap(n_components, n_neighbors=15, min_dist=0.1, metric="euclidean"):
-    reducer = umap.UMAP(
-        n_neighbors=n_neighbors,
-        min_dist=min_dist,
-        n_components=n_components,
-        metric=metric,
-        random_state=42,
-    )
-
-    return reducer.fit_transform(latent)
-
-
 # -----------------------------
-# 2D UMAP plot
+# 2D PeakVI latent plot
 # -----------------------------
-def plot_umap_2d(n_neighbors=15, min_dist=0.1, metric="euclidean"):
-    embedding = compute_umap(
-        n_components=2,
-        n_neighbors=n_neighbors,
-        min_dist=min_dist,
-        metric=metric,
-    )
-
+def plot_PeakVI_2d():
     fig, ax = plt.subplots(figsize=(9, 7))
 
     for label in unique_cell_types:
         mask = cell_types == label
 
         ax.scatter(
-            embedding[mask, 0],
-            embedding[mask, 1],
+            latent[mask, 0],
+            latent[mask, 1],
             s=2,
             color=label_to_color[label],
             alpha=0.75,
             rasterized=True,
         )
 
-    ax.set_xlabel("UMAP1")
-    ax.set_ylabel("UMAP2")
+    ax.set_xlabel("Peak 1")
+    ax.set_ylabel("Peak 2")
 
     remove_axis_numbers(ax)
 
@@ -144,21 +123,15 @@ def plot_umap_2d(n_neighbors=15, min_dist=0.1, metric="euclidean"):
 
     plt.tight_layout()
 
-    filename = f"{name}_umap2d_nn{n_neighbors}_mindist{min_dist}.png"
+    filename = f"{name}_peakvi_2d.png"
     plt.savefig(save_dir / filename, dpi=600, bbox_inches="tight")
     plt.show()
 
 
 # -----------------------------
-# 3D UMAP plot
+# 3D PeakVI latent plot
 # -----------------------------
-def plot_umap_3d(n_neighbors=15, min_dist=0.1, metric="euclidean"):
-    embedding = compute_umap(
-        n_components=3,
-        n_neighbors=n_neighbors,
-        min_dist=min_dist,
-        metric=metric,
-    )
+def plot_PeakVI_3d():
 
     fig = plt.figure(figsize=(10, 8))
     ax = fig.add_subplot(111, projection="3d")
@@ -167,18 +140,18 @@ def plot_umap_3d(n_neighbors=15, min_dist=0.1, metric="euclidean"):
         mask = cell_types == label
 
         ax.scatter(
-            embedding[mask, 0],
-            embedding[mask, 1],
-            embedding[mask, 2],
+            latent[mask, 0],
+            latent[mask, 1],
+            latent[mask, 2],
             s=2,
             color=label_to_color[label],
             alpha=0.8,
             rasterized=True,
         )
 
-    ax.set_xlabel("UMAP1", labelpad=0)
-    ax.set_ylabel("UMAP2", labelpad=0)
-    ax.set_zlabel("UMAP3", labelpad=0)
+    ax.set_xlabel("Peak 1", labelpad=0)
+    ax.set_ylabel("Peak 2", labelpad=0)
+    ax.set_zlabel("Peak 3", labelpad=0)
 
     ax.grid(True)
 
@@ -186,11 +159,11 @@ def plot_umap_3d(n_neighbors=15, min_dist=0.1, metric="euclidean"):
     ax.yaxis.pane.set_alpha(0.0)
     ax.zaxis.pane.set_alpha(0.0)
 
-    ax.set_xlim(-3.5, 3.5)
-    ax.set_ylim(-2.5, 2)
-    ax.set_zlim(-3.5, 3.5)
+    # ax.set_xlim(-5, 8)
+    # ax.set_ylim(-10, 30)
+    # ax.set_zlim(-10, 25)
 
-    remove_axis_numbers(ax, is_3d=True)
+    # remove_axis_numbers(ax, is_3d=True)
 
     ax.view_init(elev=20, azim=130)
 
@@ -210,7 +183,7 @@ def plot_umap_3d(n_neighbors=15, min_dist=0.1, metric="euclidean"):
         top=1.1,
     )
 
-    filename = f"{name}_umap3d_nn{n_neighbors}_mindist{min_dist}.png"
+    filename = f"{name}_peakvi_3d.png"
     plt.savefig(save_dir / filename, dpi=600)
     plt.show()
 
@@ -218,7 +191,5 @@ def plot_umap_3d(n_neighbors=15, min_dist=0.1, metric="euclidean"):
 # -----------------------------
 # Run plots
 # -----------------------------
-for n_neighbors in [5, 15, 50]:
-    for min_dist in [0.1, 0.5, 0.9]:
-        # plot_umap_2d(n_neighbors=n_neighbors, min_dist=min_dist)
-        plot_umap_3d(n_neighbors=n_neighbors, min_dist=min_dist)
+
+plot_PeakVI_3d()

@@ -14,8 +14,8 @@ from mpl_toolkits.mplot3d import Axes3D  # needed for 3D plotting
 # -----------------------------
 name = "simba_subset_dim16"
 
-cell_adata_path = "models/adata_cells_ldm16_simba.h5ad"
-feature_adata_path = "models/adata_peaks_ldm16_simba.h5ad"
+cell_adata_path = "results/simba/simba_subset_dim{16}/adata_cells_ldm16_simba.h5ad"
+feature_adata_path = "results/simba/simba_subset_dim{16}/adata_peaks_ldm16_simba.h5ad"
 
 save_dir = Path("plots")
 save_dir.mkdir(parents=True, exist_ok=True)
@@ -252,9 +252,9 @@ def plot_umap_3d(
     ax.yaxis.pane.set_alpha(0.0)
     ax.zaxis.pane.set_alpha(0.0)
 
-    ax.set_xlim(-10, 10)
-    ax.set_ylim(-10, 10)
-    ax.set_zlim(-10, 10)
+    ax.set_xlim(3, 20)
+    ax.set_ylim(-10, 8)
+    ax.set_zlim(-5, 12)
 
     remove_axis_numbers(ax, is_3d=True)
 
@@ -275,5 +275,4 @@ def plot_umap_3d(
 # -----------------------------
 # Run plots
 # -----------------------------
-plot_umap_2d(n_neighbors=15, min_dist=0.5)
 plot_umap_3d(n_neighbors=15, min_dist=0.5)
