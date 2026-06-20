@@ -163,7 +163,7 @@ def plot_PeakVI_3d():
     # ax.set_ylim(-10, 30)
     # ax.set_zlim(-10, 25)
 
-    # remove_axis_numbers(ax, is_3d=True)
+    remove_axis_numbers(ax, is_3d=True)
 
     ax.view_init(elev=20, azim=130)
 
