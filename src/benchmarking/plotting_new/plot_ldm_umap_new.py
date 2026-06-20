@@ -285,3 +285,8 @@ for n_neighbors in [5, 15, 50]:
             n_neighbors=n_neighbors,
             min_dist=min_dist,
         )
+# ------------------------------
+# Run with specific settings
+# ------------------------------
+# plot_umap_2d(n_neighbors=15, min_dist=0.1)
+# plot_umap_3d(n_neighbors=15, min_dist=0.1)
