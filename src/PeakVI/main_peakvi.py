@@ -18,7 +18,7 @@ torch.set_num_interop_threads(1)
 # -----------------------------
 # Load AnnData
 data_loader = Data()
-adata = data_loader.load_data(backed=False, full=True)
+adata = data_loader.load_data(backed=False, specify_path="train_sets/adata_subset_10k_1.h5ad")
 
 if sp.issparse(adata.X) and not isinstance(adata.X, sp.csr_matrix):
     adata.X = adata.X.tocsr()
@@ -42,10 +42,10 @@ model = scvi.model.PEAKVI(
 
 model.train(
     max_epochs=200,
-    accelerator="cpu",
+    accelerator="gpu",
     devices=1,
-    batch_size=8192,
     early_stopping=True,
+    batch_size=128,
     early_stopping_patience=20,
     datasplitter_kwargs={"num_workers": 0},
 )
@@ -75,12 +75,4 @@ print(latent_tensor.shape)
 # -----------------------------
 # 6. Save as .pth file
 # -----------------------------
-torch.save(latent_tensor, "models/peakvi_latent_16d.pth")
-torch.save(
-    {
-        "latent": latent_tensor,
-        "cell_ids": list(adata.obs_names),
-        "n_latent": 16,
-    },
-    "models/peakvi_latent_16d_extra.pth"
-)
+torch.save(latent_tensor, f"models/peakvi_latent_{latent_tensor.shape[1]}d_subset_10k.pth")

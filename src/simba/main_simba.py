@@ -187,8 +187,8 @@ def main() -> None:
         except Exception:
             pass
 
-    cell_path = result_dir / "adata_cells_simba.h5ad"
-    peak_path = result_dir / "adata_peaks_simba.h5ad"
+    cell_path = result_dir / f"adata_cells_ldm{args.embedding_dim}_simba.h5ad"
+    peak_path = result_dir / f"adata_peaks_ldm{args.embedding_dim}_simba.h5ad"
 
     adata_cells.write_h5ad(cell_path)
     adata_peaks.write_h5ad(peak_path)

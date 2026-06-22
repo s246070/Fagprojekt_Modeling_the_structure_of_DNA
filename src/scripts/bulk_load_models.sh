@@ -4,20 +4,22 @@
 set -e
 
 # Define the parameter ranges
-LS_DIMS=(2 3 8 16 32)
+models_paths=("models/ldm_ls2_epoch1000_blocks10000_index1.pth" "models/ldm_ls3_epoch1000_blocks10000_index1.pth" "models/ldm_ls8_epoch1000_blocks10000_index1.pth" "models/ldm_ls16_epoch1000_blocks10000_index1.pth" "models/ldm_ls32_epoch1000_blocks10000_index1.pth")
+DIM=(2 3 8 16 32)
 SEED=1
-INDEX=1
+INDEX=2
 EPOCHS=1001
-LR=0.005
-NUM_BLOCKS=1000
+LR=0.0025
+NUM_BLOCKS=10000
 DATA_PATH="train_sets/adata_subset_10k_1.h5ad"
 
 echo "Submitting LSF jobs..."
 echo "========================================"
 
-for dim in "${LS_DIMS[@]}"; do
-    job_name="subset_block10_${dim}_dim_run1"
-    echo "Submitting: $job_name (LS_DIM=$dim)"
+for i in "${!models_paths[@]}"; do
+    model_path="${models_paths[$i]}"
+    job_name="JOHN"
+    echo "Submitting: $job_name"
 
   job_cmd=$(cat <<EOF
 cd "$PWD" || exit 1
@@ -30,18 +32,19 @@ export MKL_NUM_THREADS=4
 export NUMEXPR_NUM_THREADS=4
 export MKL_DYNAMIC=false
 export OMP_DYNAMIC=false
-python src/dna_modelling/main.py \
+python src/dna_modelling/load_models.py \
   --seed $SEED \
-  --ls-dim $dim \
   --index $INDEX \
   --no-full-data \
   --epochs $EPOCHS \
   --lr $LR \
   --no-weighting \
-  --batching \
+  --no-batching \
   --validation \
   --num-blocks $NUM_BLOCKS \
-  --data-path $DATA_PATH
+  --data-path $DATA_PATH \
+  --ls_dim ${DIM[$i]} \
+  --model-path $model_path
 EOF
   )
 

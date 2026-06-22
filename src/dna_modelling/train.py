@@ -86,7 +86,7 @@ def TrainModel(
             )
 
             with open(
-                f"results/ldm_ls{ls_dim}_epoch{epoch}_blocks{num_blocks}_index{model.index}.csv",
+                f"results/ldm_ls{ls_dim}_blocks{num_blocks}_index{model.index}.csv",
                 "a",
             ) as f:
                 f.write(f"{current_loss},{auc},{f1_score},{pr_auc}\n")
