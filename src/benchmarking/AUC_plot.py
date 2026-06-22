@@ -23,9 +23,9 @@ for i in [2, 3, 8, 16, 32]:
         f1_values[i].append(float(data[2]))
         pr_auc_values[i].append(float(data[3]))
 
-for i in loss.keys():
+for i in auc_values.keys():
     print(f"ls_dim={i}")
-    print(f"Loss: {loss[i][-1]:.4f} - AUC: {auc_values[i][-1]:.4f} - F1 Score: {f1_values[i][-1]:.4f} - PR AUC: {pr_auc_values[i][-1]:.4f}")
+    print(f"AUC: {auc_values[i][-1]:.4f} - F1 Score: {f1_values[i][-1]:.4f} - PR AUC: {pr_auc_values[i][-1]:.4f}")
 
 plt.figure(figsize=(12, 8))
 for i in loss:

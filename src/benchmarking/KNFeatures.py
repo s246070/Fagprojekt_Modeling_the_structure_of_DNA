@@ -7,7 +7,9 @@ import scanpy as sc
 with open("src/benchmarking/cell_types_subset_1.txt", "r") as f:
     cell_types = [line.strip() for line in f]
 
-model = torch.load("models/ldm_ls2_epoch1000_index1.pth")
+name = "ldm_ls32_epoch1000_blocks100_index1"
+
+model = torch.load(f"models/{name}.pth")
 
 adata = sc.read_h5ad("data/train_sets/adata_subset_10k_1.h5ad", backed="r")
 
@@ -31,7 +33,7 @@ for cell_type, centroid in centroids.items():
     closest_indices = np.argsort(distances)[:50]
     closest_features[cell_type] = adata.var.Feature[closest_indices].tolist()
 
-with open(f"results/KNFeatures_no_batching.csv", "w") as f:
+with open(f"results/KNFeatures_{name}.csv", "w") as f:
     for i in closest_features.keys():
         f.write(f"{i},")
     f.write("\n")
@@ -39,6 +41,3 @@ with open(f"results/KNFeatures_no_batching.csv", "w") as f:
         for cell_type in closest_features.keys():
             f.write(f"{closest_features[cell_type][i]}," if i < len(closest_features[cell_type]) else ",")
         f.write("\n")
-
-with open(f"results/KNFeatures_no_batching.txt", "w") as f:
-    f.write(closest_features.__str__())
