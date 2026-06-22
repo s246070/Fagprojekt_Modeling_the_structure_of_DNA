@@ -8,9 +8,9 @@ from matplotlib.lines import Line2D
 # -----------------------------
 # Settings
 # -----------------------------
-name = "ldm_ls3_epoch1000_blocks100_index1"
-model_path = f"models/{name}.pth"
-cell_type_path = "src/benchmarking/cell_types_subset_1.txt"
+name = "ldm_ls2_weighting_False_run100"
+model_path = f"models/plotting/{name}.pth"
+cell_type_path = "src/benchmarking/cell_types.txt"
 save_dir = Path("plots")
 save_dir.mkdir(exist_ok=True)
 
@@ -76,7 +76,7 @@ def plot_ldm_2d():
         feature_embeddings[:, 1],
         s=0.5,
         c=feature_color,
-        alpha=0.1,
+        alpha=0.05,
         rasterized=True
     )
 
@@ -92,8 +92,8 @@ def plot_ldm_2d():
             rasterized=True
         )
 
-    ax.set_xlim(-9, 9)
-    ax.set_ylim(-9, 9)
+    ax.set_xlim(-3.75, 3.75)
+    ax.set_ylim(-3.75, 3.75)
 
     ax.set_xlabel("LDM1")
     ax.set_ylabel("LDM2")
@@ -129,13 +129,13 @@ def plot_ldm_2d():
             )
         )
 
-    ax.legend(
-        handles=legend_handles,
-        title="Cell Types",
-        bbox_to_anchor=(1.02, 1),
-        loc="upper left",
-        frameon=False
-    )
+    # ax.legend(
+    #     handles=legend_handles,
+    #     title="Cell Types",
+    #     bbox_to_anchor=(1.02, 1),
+    #     loc="upper left",
+    #     frameon=False
+    # )
 
     plt.tight_layout()
     plt.savefig(save_dir / f"{name}_2d.png", dpi=600, bbox_inches="tight")
@@ -241,4 +241,4 @@ def plot_ldm_3d():
     plt.show()
 
 
-plot_ldm_3d()
+plot_ldm_2d()

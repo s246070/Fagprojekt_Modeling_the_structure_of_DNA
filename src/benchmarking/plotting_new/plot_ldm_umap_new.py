@@ -12,8 +12,8 @@ from mpl_toolkits.mplot3d import Axes3D  # needed for 3D plotting
 # -----------------------------
 # Settings
 # -----------------------------
-name = "ldm_ls16_epoch1000_blocks10_index1"
-model_path = f"models/ldm_ls16_epoch1000_blocks10_index1.pth"
+name = "ldm_ls16_epoch1000_blocks100_index1"
+model_path = f"models/plotting/{name}.pth"
 cell_type_path = "src/benchmarking/cell_types_subset_1.txt"
 
 save_dir = Path("plots")
@@ -274,14 +274,12 @@ def plot_umap_3d(
 # -----------------------------
 # Run plots
 # -----------------------------
-for n_neighbors in [5, 15, 50]:
-    for min_dist in [0.1, 0.5, 0.9]:
-        plot_umap_2d(
-            n_neighbors=n_neighbors,
-            min_dist=min_dist,
-        )
+plot_umap_2d(
+    n_neighbors=15,
+    min_dist=0.5,
+)
 
-        plot_umap_3d(
-            n_neighbors=n_neighbors,
-            min_dist=min_dist,
-        )
+plot_umap_3d(
+    n_neighbors=15,
+    min_dist=0.5,
+)

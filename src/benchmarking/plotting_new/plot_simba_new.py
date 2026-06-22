@@ -17,7 +17,7 @@ feature_adata_path = "results/simba/simba_subset_dim{3}/adata_peaks_ldm3_simba.h
 
 save_dir = Path("plots")
 save_dir.mkdir(parents=True, exist_ok=True)
-
+ 
 
 # -----------------------------
 # Load SIMBA cell embeddings
